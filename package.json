@@ -1,0 +1,23 @@
+{
+  "name": "charantula",
+  "version": "1.0.0",
+  "description": "Storyboard creator",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davidyorr/charantula.git"
+  },
+  "author": "",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/davidyorr/charantula/issues"
+  },
+  "homepage": "https://github.com/davidyorr/charantula#readme",
+  "devDependencies": {
+    "electron": "43.1.1"
+  }
+}
