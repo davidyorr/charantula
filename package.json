@@ -1,23 +1,32 @@
 {
-  "name": "charantula",
-  "version": "1.0.0",
-  "description": "Storyboard creator",
-  "main": "main.js",
-  "scripts": {
-    "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/davidyorr/charantula.git"
-  },
-  "author": "",
-  "license": "UNLICENSED",
-  "bugs": {
-    "url": "https://github.com/davidyorr/charantula/issues"
-  },
-  "homepage": "https://github.com/davidyorr/charantula#readme",
-  "devDependencies": {
-    "electron": "43.1.1"
-  }
+	"name": "charantula",
+	"version": "1.0.0",
+	"type": "module",
+	"description": "Storyboard creator",
+	"main": "dist/main/main.js",
+	"scripts": {
+		"dev": "vite",
+		"build": "vite build",
+		"start": "electron .",
+		"test": "echo \"Error: no test specified\" && exit 1"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/davidyorr/charantula.git"
+	},
+	"author": "",
+	"license": "UNLICENSED",
+	"bugs": {
+		"url": "https://github.com/davidyorr/charantula/issues"
+	},
+	"homepage": "https://github.com/davidyorr/charantula#readme",
+	"devDependencies": {
+		"electron": "43.1.1",
+		"prettier": "3.9.6",
+		"typescript": "7.0.2",
+		"vite": "8.1.5",
+		"vite-plugin-electron": "1.1.0",
+		"vite-plugin-electron-renderer": "1.0.0",
+		"vite-plugin-solid": "2.11.13"
+	}
 }
