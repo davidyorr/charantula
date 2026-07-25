@@ -21,6 +21,9 @@
 	},
 	"homepage": "https://github.com/davidyorr/charantula#readme",
 	"devDependencies": {
+		"@types/better-sqlite3": "7.6.13",
+		"@types/node": "26.1.1",
+		"drizzle-kit": "1.0.0-rc.4",
 		"electron": "43.1.1",
 		"prettier": "3.9.6",
 		"typescript": "7.0.2",
@@ -28,5 +31,9 @@
 		"vite-plugin-electron": "1.1.0",
 		"vite-plugin-electron-renderer": "1.0.0",
 		"vite-plugin-solid": "2.11.13"
+	},
+	"dependencies": {
+		"better-sqlite3": "13.0.1",
+		"drizzle-orm": "1.0.0-rc.4"
 	}
 }

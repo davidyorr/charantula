@@ -4,5 +4,12 @@
 		"lib": ["ESNext"],
 		"types": ["node"]
 	},
-	"include": ["src/main", "vite.config.ts", "prettier.config.ts"]
+	"include": [
+		"src/db",
+		"src/main",
+		"src/preload",
+		"vite.config.ts",
+		"prettier.config.ts",
+		"src/preload/preload.ts"
+	]
 }
