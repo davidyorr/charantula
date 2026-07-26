@@ -1,0 +1,106 @@
+import { eq } from "drizzle-orm";
+import { chapters } from "@/db/schema";
+import type { IpcApi } from "@/shared/ipc";
+import { getDb } from "@/main/db";
+import { nextSortOrder } from "@/main/handlers/sortOrder";
+
+export const chaptersHandlers: IpcApi["chapters"] = {
+	async listByCollection(collectionId) {
+		const db = getDb();
+		return db
+			.select()
+			.from(chapters)
+			.where(eq(chapters.collectionId, collectionId))
+			.orderBy(chapters.sortOrder);
+	},
+
+	async get(id) {
+		const db = getDb();
+		const [row] = await db.select().from(chapters).where(eq(chapters.id, id));
+		return row ?? null;
+	},
+
+	async create(input) {
+		const db = getDb();
+		const sortOrder =
+			input.sortOrder ??
+			(await nextSortOrder(
+				db,
+				chapters,
+				chapters.sortOrder,
+				eq(chapters.collectionId, input.collectionId),
+			));
+		const [row] = await db
+			.insert(chapters)
+			.values({ ...input, sortOrder })
+			.returning();
+		return row;
+	},
+
+	async update(id, patch) {
+		const db = getDb();
+
+		const { collectionId, sortOrder, ...safePatch } = patch as {
+			collectionId?: never;
+			sortOrder?: never;
+		};
+
+		if (collectionId !== undefined) {
+			throw new Error('Use "move()" to change a chapter collection.');
+		}
+		if (sortOrder !== undefined) {
+			throw new Error('Use "reorder()" to change chapter ordering.');
+		}
+
+		const [row] = await db
+			.update(chapters)
+			.set(safePatch)
+			.where(eq(chapters.id, id))
+			.returning();
+		if (!row) {
+			throw new Error(`Chapter "${id}" not found.`);
+		}
+		return row;
+	},
+
+	async delete(id) {
+		const db = getDb();
+		await db.delete(chapters).where(eq(chapters.id, id));
+	},
+
+	// collectionId isn't needed for the update itself -- each entry.id already
+	// uniquely identifies its row -- it's accepted for parity with the
+	// contract and so callers can scope optimistic UI updates.
+	async reorder(_collectionId, order) {
+		const db = getDb();
+		db.transaction((tx) => {
+			for (const entry of order) {
+				tx.update(chapters)
+					.set({ sortOrder: entry.sortOrder })
+					.where(eq(chapters.id, entry.id))
+					.run();
+			}
+		});
+	},
+
+	async move(id, targetCollectionId, sortOrder) {
+		const db = getDb();
+		const resolvedSortOrder =
+			sortOrder ??
+			(await nextSortOrder(
+				db,
+				chapters,
+				chapters.sortOrder,
+				eq(chapters.collectionId, targetCollectionId),
+			));
+		const [row] = await db
+			.update(chapters)
+			.set({ collectionId: targetCollectionId, sortOrder: resolvedSortOrder })
+			.where(eq(chapters.id, id))
+			.returning();
+		if (!row) {
+			throw new Error(`Chapter "${id}" not found.`);
+		}
+		return row;
+	},
+};

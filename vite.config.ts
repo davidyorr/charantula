@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import solidPlugin from "vite-plugin-solid";
 import electron from "vite-plugin-electron/simple";
+import { fileURLToPath, URL } from "node:url";
 
 export default defineConfig({
 	plugins: [
@@ -31,6 +32,12 @@ export default defineConfig({
 	],
 
 	base: "./",
+
+	resolve: {
+		alias: {
+			"@": fileURLToPath(new URL("./src", import.meta.url)),
+		},
+	},
 
 	server: {
 		port: 5173,
