@@ -334,22 +334,3 @@ export interface IpcApi {
 		reorder: (eventId: string, order: EventTagReorderEntry[]) => Promise<void>;
 	};
 }
-
-// -----------------------------------------------------------------------------
-// Namespace list -- used by main.ts/preload.ts to build "namespace:method"
-// channel strings consistently instead of hand-typing them in two places.
-// -----------------------------------------------------------------------------
-
-export const IPC_NAMESPACES = [
-	"project",
-	"metadata",
-	"collections",
-	"chapters",
-	"characters",
-	"characterAliases",
-	"tags",
-	"characterTags",
-	"events",
-	"eventCharacters",
-	"eventTags",
-] as const satisfies ReadonlyArray<keyof IpcApi>;

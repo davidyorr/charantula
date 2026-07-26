@@ -12,6 +12,7 @@ import { eventsHandlers } from "@/main/handlers/events";
 import { eventCharactersHandlers } from "@/main/handlers/eventCharacters";
 import { eventTagsHandlers } from "@/main/handlers/eventTags";
 import { closeProject } from "@/main/db";
+import path from "path";
 
 console.log("Hello from Electron 👋");
 
@@ -32,6 +33,11 @@ app.whenReady().then(() => {
 
 	const win = new BrowserWindow({
 		title: "Main window",
+		webPreferences: {
+			preload: path.join(import.meta.dirname, "../preload/preload.mjs"),
+			contextIsolation: true,
+			nodeIntegration: false,
+		},
 	});
 
 	if (process.env.VITE_DEV_SERVER_URL) {
