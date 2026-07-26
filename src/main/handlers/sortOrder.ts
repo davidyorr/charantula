@@ -1,9 +1,9 @@
 // Shared "max(sortOrder) + 1, scoped to a parent" helper, used by every
 // namespace's create/add to implement the "append at end if sortOrder is
 // omitted" convention described in the IPC contract.
-
 import { max, type SQL } from "drizzle-orm";
 import type { SQLiteColumn, SQLiteTable } from "drizzle-orm/sqlite-core";
+
 import type { DrizzleDb } from "@/main/db";
 
 /**
@@ -21,7 +21,7 @@ export async function nextSortOrder(
 	sortOrderColumn: SQLiteColumn,
 	where?: SQL,
 ): Promise<number> {
-	const query = db.select({ max: max(sortOrderColumn) }).from(table as any);
+	const query = db.select({ max: max(sortOrderColumn) }).from(table);
 	const [row] = where ? await query.where(where) : await query;
 	return row?.max === null || row?.max === undefined ? 0 : Number(row.max) + 1;
 }

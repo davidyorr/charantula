@@ -1,12 +1,13 @@
 import fs from "node:fs/promises";
+
 import { metadata } from "@/db/schema";
-import type { IpcApi, ProjectOpenResult } from "@/shared/ipc";
 import {
 	activateProjectConnection,
 	closeProject,
 	openProjectConnection,
 } from "@/main/db";
 import { addRecentProject, getRecentProjects } from "@/main/recentProjects";
+import type { IpcApi, ProjectOpenResult } from "@/shared/ipc";
 
 async function fileExists(filePath: string): Promise<boolean> {
 	try {

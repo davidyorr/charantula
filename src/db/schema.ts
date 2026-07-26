@@ -31,7 +31,6 @@
 // introducedInChapterId, so unlike synopsis/image they're allowed to hold
 // spoilers (e.g. the alias "The White Wizard" only becomes visible once the
 // reader reaches the chapter where it's introduced).
-
 import { sql } from "drizzle-orm";
 import {
 	sqliteTable,

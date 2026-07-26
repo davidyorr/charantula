@@ -1,7 +1,7 @@
-import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
-import electron from "vite-plugin-electron/simple";
 import { fileURLToPath, URL } from "node:url";
+import { defineConfig } from "vite";
+import electron from "vite-plugin-electron/simple";
+import solidPlugin from "vite-plugin-solid";
 
 export default defineConfig({
 	plugins: [

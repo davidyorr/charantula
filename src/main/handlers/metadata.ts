@@ -1,7 +1,8 @@
 import { eq } from "drizzle-orm";
+
 import { metadata } from "@/db/schema";
-import type { IpcApi } from "@/shared/ipc";
 import { getDb } from "@/main/db";
+import type { IpcApi } from "@/shared/ipc";
 
 export const metadataHandlers: IpcApi["metadata"] = {
 	async get() {

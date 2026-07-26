@@ -1,12 +1,11 @@
 // Owns the single open sqlite connection for whichever project is currently
 // loaded. Nothing else should construct a Database/drizzle instance directly
 // -- all handlers go through getDb().
-
-import path from "node:path";
-import { app } from "electron";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
 import { migrate } from "drizzle-orm/better-sqlite3/migrator";
+import { app } from "electron";
+import path from "node:path";
 
 function createDrizzle(sqlite: Database.Database) {
 	return drizzle({ client: sqlite });

@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
+
 import { chapters } from "@/db/schema";
-import type { IpcApi } from "@/shared/ipc";
 import { getDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
+import type { IpcApi } from "@/shared/ipc";
 
 export const chaptersHandlers: IpcApi["chapters"] = {
 	async listByCollection(collectionId) {

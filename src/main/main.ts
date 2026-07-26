@@ -1,18 +1,19 @@
 import { app, BrowserWindow } from "electron";
-import { registerIpcHandlers } from "@/main/registerHandlers";
-import { projectHandlers } from "@/main/handlers/project";
-import { metadataHandlers } from "@/main/handlers/metadata";
-import { collectionsHandlers } from "@/main/handlers/collections";
+import path from "path";
+
+import { closeProject } from "@/main/db";
 import { chaptersHandlers } from "@/main/handlers/chapters";
-import { tagsHandlers } from "@/main/handlers/tags";
-import { charactersHandlers } from "@/main/handlers/characters";
 import { characterAliasesHandlers } from "@/main/handlers/characterAliases";
 import { characterTagsHandlers } from "@/main/handlers/characterTags";
-import { eventsHandlers } from "@/main/handlers/events";
+import { charactersHandlers } from "@/main/handlers/characters";
+import { collectionsHandlers } from "@/main/handlers/collections";
 import { eventCharactersHandlers } from "@/main/handlers/eventCharacters";
 import { eventTagsHandlers } from "@/main/handlers/eventTags";
-import { closeProject } from "@/main/db";
-import path from "path";
+import { eventsHandlers } from "@/main/handlers/events";
+import { metadataHandlers } from "@/main/handlers/metadata";
+import { projectHandlers } from "@/main/handlers/project";
+import { tagsHandlers } from "@/main/handlers/tags";
+import { registerIpcHandlers } from "@/main/registerHandlers";
 
 console.log("Hello from Electron 👋");
 

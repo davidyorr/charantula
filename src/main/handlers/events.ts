@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+
 import {
 	chapters,
 	characters,
@@ -7,9 +8,9 @@ import {
 	events,
 	tags,
 } from "@/db/schema";
-import type { IpcApi } from "@/shared/ipc";
 import { getDb, type DrizzleDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
+import type { IpcApi } from "@/shared/ipc";
 
 /**
  * Not required by the contract, but gives a clear error before the raw sqlite

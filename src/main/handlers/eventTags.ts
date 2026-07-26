@@ -1,8 +1,9 @@
 import { and, eq } from "drizzle-orm";
+
 import { eventTags } from "@/db/schema";
-import type { IpcApi } from "@/shared/ipc";
 import { getDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
+import type { IpcApi } from "@/shared/ipc";
 
 export const eventTagsHandlers: IpcApi["eventTags"] = {
 	async listByEvent(eventId) {

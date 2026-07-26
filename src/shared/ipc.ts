@@ -9,8 +9,6 @@
 // Row types are derived from the Drizzle schema (src/db/schema.ts) so this
 // file can never silently drift from the actual table shapes. Only the DTOs
 // (Create*/Update*/reorder entries) and the IpcApi surface are hand-written.
-
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import type {
 	metadata,
 	collections,
@@ -23,6 +21,7 @@ import type {
 	eventCharacters,
 	eventTags,
 } from "../db/schema";
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 // -----------------------------------------------------------------------------
 // Row types -- exactly what's in the DB, straight from the schema

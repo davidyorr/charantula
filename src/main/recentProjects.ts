@@ -1,6 +1,7 @@
+import { app } from "electron";
 import fs from "node:fs/promises";
 import path from "node:path";
-import { app } from "electron";
+
 import type { RecentProject } from "@/shared/ipc";
 
 const MAX_RECENT = 10;

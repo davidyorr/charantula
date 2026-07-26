@@ -1,4 +1,5 @@
 import { eq, inArray } from "drizzle-orm";
+
 import {
 	chapters,
 	characterAliases,
@@ -7,9 +8,9 @@ import {
 	collections,
 	tags,
 } from "@/db/schema";
-import type { IpcApi } from "@/shared/ipc";
 import { getDb, type DrizzleDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
+import type { IpcApi } from "@/shared/ipc";
 
 async function getCharacterDetailInternal(db: DrizzleDb, id: string) {
 	const [character] = await db
@@ -60,7 +61,9 @@ async function resolveChapterPositions(
 	db: DrizzleDb,
 	chapterIds: string[],
 ): Promise<Map<string, ChapterPosition>> {
-	if (chapterIds.length === 0) return new Map();
+	if (chapterIds.length === 0) {
+		return new Map();
+	}
 
 	const rows = await db
 		.select({
@@ -141,7 +144,9 @@ export const charactersHandlers: IpcApi["characters"] = {
 		}
 
 		const isVisible = (introducedInChapterId: string | null): boolean => {
-			if (introducedInChapterId === null) return true;
+			if (introducedInChapterId === null) {
+				return true;
+			}
 			const position = positions.get(introducedInChapterId);
 			return position ? isAtOrBefore(position, progressPosition) : false;
 		};
