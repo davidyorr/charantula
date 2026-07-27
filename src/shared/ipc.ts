@@ -125,26 +125,26 @@ export type CreateEventTagInput = Omit<EventTag, "sortOrder"> & {
 // table's natural identity is.
 // -----------------------------------------------------------------------------
 
-export interface ReorderEntry {
+export type ReorderEntry = {
 	id: string;
 	sortOrder: number;
-}
-export interface AliasReorderEntry {
+};
+export type AliasReorderEntry = {
 	alias: string;
 	sortOrder: number;
-}
-export interface CharacterTagReorderEntry {
+};
+export type CharacterTagReorderEntry = {
 	tagId: string;
 	sortOrder: number;
-}
-export interface EventCharacterReorderEntry {
+};
+export type EventCharacterReorderEntry = {
 	characterId: string;
 	sortOrder: number;
-}
-export interface EventTagReorderEntry {
+};
+export type EventTagReorderEntry = {
 	tagId: string;
 	sortOrder: number;
-}
+};
 
 // -----------------------------------------------------------------------------
 // Hydrated read models
@@ -155,15 +155,15 @@ export interface EventTagReorderEntry {
 // joins with Drizzle before returning.
 // -----------------------------------------------------------------------------
 
-export interface CharacterDetail extends Character {
+export type CharacterDetail = {
 	aliases: CharacterAlias[];
 	tags: Array<CharacterTag & { tag: Tag }>;
-}
+} & Character;
 
-export interface EventDetail extends Event {
+export type EventDetail = {
 	characters: Array<EventCharacter & { character: Character }>;
 	tags: Array<EventTag & { tag: Tag }>;
-}
+} & Event;
 
 // Reader-facing view: same as CharacterDetail, but aliases/tags are
 // pre-filtered by reveal order relative to `progressChapterId` (a null
@@ -171,32 +171,32 @@ export interface EventDetail extends Event {
 // everything). The linear-position resolution described in the schema
 // comments (collection.sortOrder -> chapter.sortOrder chain) happens inside
 // the main-process handler, not the renderer.
-export interface ReaderCharacterView {
+export type ReaderCharacterView = {
 	character: Character;
 	visibleAliases: CharacterAlias[];
 	visibleTags: Array<CharacterTag & { tag: Tag }>;
-}
+};
 
 // -----------------------------------------------------------------------------
 // Project lifecycle (not scoped to an open DB connection)
 // -----------------------------------------------------------------------------
 
-export interface ProjectOpenResult {
+export type ProjectOpenResult = {
 	path: string;
 	metadata: Metadata;
-}
+};
 
-export interface RecentProject {
+export type RecentProject = {
 	path: string;
 	projectName: string;
 	lastOpenedAt: number;
-}
+};
 
 // -----------------------------------------------------------------------------
 // The contract itself
 // -----------------------------------------------------------------------------
 
-export interface IpcApi {
+export type IpcApi = {
 	project: {
 		new: (args: {
 			path: string;
@@ -335,4 +335,4 @@ export interface IpcApi {
 		remove: (eventId: string, tagId: string) => Promise<void>;
 		reorder: (eventId: string, order: EventTagReorderEntry[]) => Promise<void>;
 	};
-}
+};

@@ -1,5 +1,3 @@
-import { eq, inArray } from "drizzle-orm";
-
 import {
 	chapters,
 	characterAliases,
@@ -11,6 +9,8 @@ import {
 import { getDb, type DrizzleDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
 import type { IpcApi } from "@/shared/ipc";
+
+import { eq, inArray } from "drizzle-orm";
 
 async function getCharacterDetailInternal(db: DrizzleDb, id: string) {
 	const [character] = await db
@@ -47,10 +47,10 @@ async function getCharacterDetailInternal(db: DrizzleDb, id: string) {
 	};
 }
 
-interface ChapterPosition {
+type ChapterPosition = {
 	collectionSortOrder: number;
 	chapterSortOrder: number;
-}
+};
 
 /**
  * Resolves each chapterId to its (collectionSortOrder, chapterSortOrder)

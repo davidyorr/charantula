@@ -13,11 +13,11 @@ function createDrizzle(sqlite: Database.Database) {
 
 export type DrizzleDb = ReturnType<typeof createDrizzle>;
 
-interface OpenProjectState {
+type OpenProjectState = {
 	path: string;
 	sqlite: Database.Database;
 	db: DrizzleDb;
-}
+};
 
 let current: OpenProjectState | null = null;
 
