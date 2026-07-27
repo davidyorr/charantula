@@ -1,6 +1,6 @@
-import { contextBridge, ipcRenderer } from "electron";
-
 import type { IpcApi } from "@/shared/ipc";
+
+import { contextBridge, ipcRenderer } from "electron";
 
 const api: IpcApi = {
 	project: {
@@ -8,6 +8,8 @@ const api: IpcApi = {
 		open: (args) => ipcRenderer.invoke("project:open", args),
 		close: () => ipcRenderer.invoke("project:close"),
 		getRecent: () => ipcRenderer.invoke("project:getRecent"),
+		pickNewPath: () => ipcRenderer.invoke("project:pickNewPath"),
+		pickOpenPath: () => ipcRenderer.invoke("project:pickOpenPath"),
 	},
 	metadata: {
 		get: () => ipcRenderer.invoke("metadata:get"),

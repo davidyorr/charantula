@@ -206,6 +206,8 @@ export interface IpcApi {
 		open: (args: { path: string }) => Promise<ProjectOpenResult>;
 		close: () => Promise<void>;
 		getRecent: () => Promise<RecentProject[]>;
+		pickNewPath: () => Promise<string | null>;
+		pickOpenPath: () => Promise<string | null>;
 	};
 
 	metadata: {

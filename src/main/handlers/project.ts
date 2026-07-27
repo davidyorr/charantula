@@ -1,5 +1,3 @@
-import fs from "node:fs/promises";
-
 import { metadata } from "@/db/schema";
 import {
 	activateProjectConnection,
@@ -8,6 +6,9 @@ import {
 } from "@/main/db";
 import { addRecentProject, getRecentProjects } from "@/main/recentProjects";
 import type { IpcApi, ProjectOpenResult } from "@/shared/ipc";
+
+import { dialog } from "electron";
+import fs from "node:fs/promises";
 
 async function fileExists(filePath: string): Promise<boolean> {
 	try {
@@ -92,5 +93,27 @@ export const projectHandlers: IpcApi["project"] = {
 
 	async getRecent() {
 		return getRecentProjects();
+	},
+
+	async pickNewPath() {
+		const result = await dialog.showSaveDialog({
+			title: "Create Project",
+			defaultPath: "Untitled.charantula",
+			filters: [{ name: "Charantula Project", extensions: ["charantula"] }],
+		});
+
+		return result.canceled ? null : result.filePath;
+	},
+
+	async pickOpenPath() {
+		const result = await dialog.showOpenDialog({
+			title: "Open Project",
+			properties: ["openFile"],
+			filters: [{ name: "Charantula Project", extensions: ["charantula"] }],
+		});
+
+		return result.canceled || result.filePaths.length === 0
+			? null
+			: result.filePaths[0];
 	},
 };
