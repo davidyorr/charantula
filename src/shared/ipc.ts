@@ -20,7 +20,8 @@ import type {
 	events,
 	eventCharacters,
 	eventTags,
-} from "../db/schema";
+} from "@/db/schema";
+
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 // -----------------------------------------------------------------------------

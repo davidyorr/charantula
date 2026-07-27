@@ -9,10 +9,21 @@ const gitignorePath = fileURLToPath(new URL(".gitignore", import.meta.url));
 export default defineConfig([
 	includeIgnoreFile(gitignorePath, { gitignoreResolution: true }),
 	{
-		files: ["**/*.{js,ts}"],
+		files: ["**/*.{js,ts,jsx,tsx}"],
 		extends: [js.configs.recommended, tseslint.configs.recommended],
 		rules: {
 			curly: ["error", "all"],
+			"no-restricted-imports": [
+				"error",
+				{
+					patterns: [
+						{
+							group: ["./*", "../*"],
+							message: "Relative imports are not allowed.",
+						},
+					],
+				},
+			],
 		},
 	},
 ]);

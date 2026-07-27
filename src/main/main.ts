@@ -1,6 +1,3 @@
-import { app, BrowserWindow } from "electron";
-import path from "path";
-
 import { closeProject } from "@/main/db";
 import { chaptersHandlers } from "@/main/handlers/chapters";
 import { characterAliasesHandlers } from "@/main/handlers/characterAliases";
@@ -14,6 +11,9 @@ import { metadataHandlers } from "@/main/handlers/metadata";
 import { projectHandlers } from "@/main/handlers/project";
 import { tagsHandlers } from "@/main/handlers/tags";
 import { registerIpcHandlers } from "@/main/registerHandlers";
+
+import { app, BrowserWindow } from "electron";
+import path from "path";
 
 console.log("Hello from Electron 👋");
 
