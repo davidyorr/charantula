@@ -1,8 +1,11 @@
+import { useNavigate } from "@solidjs/router";
 import { createSignal, type Component } from "solid-js";
 
 export const WelcomePage: Component = () => {
 	const [busy, setBusy] = createSignal(false);
 	const [error, setError] = createSignal<string | null>(null);
+
+	const navigate = useNavigate();
 
 	async function handleCreateProjectClick() {
 		setBusy(true);
@@ -20,7 +23,8 @@ export const WelcomePage: Component = () => {
 				path,
 				projectName,
 			});
-			console.log(result);
+
+			navigate(`/edit/${encodeURIComponent(result.metadata.projectName)}`);
 		} catch (error) {
 			setError(
 				error instanceof Error ? error.message : "Failed to create project",
@@ -40,7 +44,8 @@ export const WelcomePage: Component = () => {
 			}
 
 			const result = await window.api.project.open({ path });
-			console.log(result);
+
+			navigate(`/edit/${encodeURIComponent(result.metadata.projectName)}`);
 		} catch (error) {
 			setError(
 				error instanceof Error ? error.message : "Failed to open project",

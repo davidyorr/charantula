@@ -41,7 +41,9 @@
 		"vite-plugin-solid": "2.11.13"
 	},
 	"dependencies": {
+		"@solidjs/router": "0.16.2",
 		"better-sqlite3": "13.0.1",
-		"drizzle-orm": "1.0.0-rc.4"
+		"drizzle-orm": "1.0.0-rc.4",
+		"solid-js": "1.9.14"
 	}
 }
