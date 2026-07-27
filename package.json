@@ -2,7 +2,7 @@
 	"name": "charantula",
 	"version": "1.0.0",
 	"type": "module",
-	"description": "Storyboard creator",
+	"description": "Organize stories without spoilers",
 	"main": "dist/main/main.js",
 	"scripts": {
 		"dev": "vite",
