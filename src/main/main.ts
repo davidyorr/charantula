@@ -44,7 +44,11 @@ app.whenReady().then(() => {
 	if (process.env.VITE_DEV_SERVER_URL) {
 		win.loadURL(process.env.VITE_DEV_SERVER_URL);
 	} else {
-		win.loadFile("dist/renderer/index.html");
+		const rendererPath = path.join(
+			import.meta.dirname,
+			"../renderer/index.html",
+		);
+		win.loadFile(rendererPath);
 	}
 });
 

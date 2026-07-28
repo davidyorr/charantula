@@ -8,7 +8,7 @@
 		"dev": "vite",
 		"build": "vite build",
 		"start": "electron .",
-		"test": "echo \"Error: no test specified\" && exit 1",
+		"test": "npm run build && npx playwright test",
 		"lint": "eslint .",
 		"format:check": "node --experimental-strip-types ./node_modules/prettier/bin/prettier.cjs . --check",
 		"format:fix": "node --experimental-strip-types ./node_modules/prettier/bin/prettier.cjs . --write"
@@ -25,6 +25,7 @@
 	"homepage": "https://github.com/davidyorr/charantula#readme",
 	"devDependencies": {
 		"@eslint/js": "10.0.1",
+		"@playwright/test": "1.62.0",
 		"@trivago/prettier-plugin-sort-imports": "6.0.2",
 		"@types/better-sqlite3": "7.6.13",
 		"@types/node": "26.1.1",

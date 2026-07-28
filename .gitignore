@@ -36,3 +36,10 @@ npm-debug.log*
 ._*
 .Trashes
 Thumbs.db
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

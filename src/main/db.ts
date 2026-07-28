@@ -22,9 +22,13 @@ type OpenProjectState = {
 let current: OpenProjectState | null = null;
 
 function migrationsFolder(): string {
-	return app.isPackaged
-		? path.join(process.resourcesPath, "drizzle")
-		: path.join(app.getAppPath(), "drizzle");
+	// Production
+	if (app.isPackaged) {
+		return path.join(process.resourcesPath, "drizzle");
+	}
+
+	// Development
+	return path.join(import.meta.dirname, "../../drizzle");
 }
 
 function createProjectState(filePath: string): OpenProjectState {
