@@ -9,6 +9,8 @@
 // Row types are derived from the Drizzle schema (src/db/schema.ts) so this
 // file can never silently drift from the actual table shapes. Only the DTOs
 // (Create*/Update*/reorder entries) and the IpcApi surface are hand-written.
+import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+
 import type {
 	metadata,
 	collections,
@@ -21,8 +23,6 @@ import type {
 	eventCharacters,
 	eventTags,
 } from "@/db/schema";
-
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 
 // -----------------------------------------------------------------------------
 // Row types -- exactly what's in the DB, straight from the schema
@@ -156,7 +156,7 @@ export type EventTagReorderEntry = {
 // -----------------------------------------------------------------------------
 
 export type CharacterDetail = {
-	aliases: CharacterAlias[];
+	aliases: Array<CharacterAlias>;
 	tags: Array<CharacterTag & { tag: Tag }>;
 } & Character;
 
@@ -173,7 +173,7 @@ export type EventDetail = {
 // the main-process handler, not the renderer.
 export type ReaderCharacterView = {
 	character: Character;
-	visibleAliases: CharacterAlias[];
+	visibleAliases: Array<CharacterAlias>;
 	visibleTags: Array<CharacterTag & { tag: Tag }>;
 };
 
@@ -205,7 +205,7 @@ export type IpcApi = {
 		}) => Promise<ProjectOpenResult>;
 		open: (args: { path: string }) => Promise<ProjectOpenResult>;
 		close: () => Promise<void>;
-		getRecent: () => Promise<RecentProject[]>;
+		getRecent: () => Promise<Array<RecentProject>>;
 		pickNewPath: () => Promise<string | null>;
 		pickOpenPath: () => Promise<string | null>;
 	};
@@ -218,21 +218,24 @@ export type IpcApi = {
 	};
 
 	collections: {
-		list: () => Promise<Collection[]>;
+		list: () => Promise<Array<Collection>>;
 		get: (id: string) => Promise<Collection | null>;
 		create: (input: CreateCollectionInput) => Promise<Collection>;
 		update: (id: string, patch: UpdateCollectionInput) => Promise<Collection>;
 		delete: (id: string) => Promise<void>;
-		reorder: (order: ReorderEntry[]) => Promise<void>;
+		reorder: (order: Array<ReorderEntry>) => Promise<void>;
 	};
 
 	chapters: {
-		listByCollection: (collectionId: string) => Promise<Chapter[]>;
+		listByCollection: (collectionId: string) => Promise<Array<Chapter>>;
 		get: (id: string) => Promise<Chapter | null>;
 		create: (input: CreateChapterInput) => Promise<Chapter>;
 		update: (id: string, patch: UpdateChapterInput) => Promise<Chapter>;
 		delete: (id: string) => Promise<void>;
-		reorder: (collectionId: string, order: ReorderEntry[]) => Promise<void>;
+		reorder: (
+			collectionId: string,
+			order: Array<ReorderEntry>,
+		) => Promise<void>;
 		/**
 		 * Moves this Chapter into a different Collection (e.g. dragging it from
 		 * "Fellowship of the Ring" into "The Two Towers"). `sortOrder` is
@@ -247,7 +250,7 @@ export type IpcApi = {
 	};
 
 	characters: {
-		list: () => Promise<Character[]>;
+		list: () => Promise<Array<Character>>;
 		get: (id: string) => Promise<Character | null>;
 		getDetail: (id: string) => Promise<CharacterDetail>;
 		getForReader: (
@@ -257,11 +260,11 @@ export type IpcApi = {
 		create: (input: CreateCharacterInput) => Promise<Character>;
 		update: (id: string, patch: UpdateCharacterInput) => Promise<Character>;
 		delete: (id: string) => Promise<void>;
-		reorder: (order: ReorderEntry[]) => Promise<void>;
+		reorder: (order: Array<ReorderEntry>) => Promise<void>;
 	};
 
 	characterAliases: {
-		listByCharacter: (characterId: string) => Promise<CharacterAlias[]>;
+		listByCharacter: (characterId: string) => Promise<Array<CharacterAlias>>;
 		create: (input: CreateAliasInput) => Promise<CharacterAlias>;
 		update: (
 			characterId: string,
@@ -269,21 +272,24 @@ export type IpcApi = {
 			patch: UpdateAliasInput,
 		) => Promise<CharacterAlias>;
 		delete: (characterId: string, alias: string) => Promise<void>;
-		reorder: (characterId: string, order: AliasReorderEntry[]) => Promise<void>;
+		reorder: (
+			characterId: string,
+			order: Array<AliasReorderEntry>,
+		) => Promise<void>;
 	};
 
 	tags: {
-		list: () => Promise<Tag[]>;
+		list: () => Promise<Array<Tag>>;
 		get: (id: string) => Promise<Tag | null>;
 		create: (input: CreateTagInput) => Promise<Tag>;
 		update: (id: string, patch: UpdateTagInput) => Promise<Tag>;
 		delete: (id: string) => Promise<void>;
-		reorder: (order: ReorderEntry[]) => Promise<void>;
+		reorder: (order: Array<ReorderEntry>) => Promise<void>;
 	};
 
 	characterTags: {
-		listByCharacter: (characterId: string) => Promise<CharacterTag[]>;
-		listByTag: (tagId: string) => Promise<CharacterTag[]>;
+		listByCharacter: (characterId: string) => Promise<Array<CharacterTag>>;
+		listByTag: (tagId: string) => Promise<Array<CharacterTag>>;
 		add: (input: CreateCharacterTagInput) => Promise<CharacterTag>;
 		update: (
 			characterId: string,
@@ -293,18 +299,18 @@ export type IpcApi = {
 		remove: (characterId: string, tagId: string) => Promise<void>;
 		reorder: (
 			characterId: string,
-			order: CharacterTagReorderEntry[],
+			order: Array<CharacterTagReorderEntry>,
 		) => Promise<void>;
 	};
 
 	events: {
-		listByChapter: (chapterId: string) => Promise<Event[]>;
+		listByChapter: (chapterId: string) => Promise<Array<Event>>;
 		get: (id: string) => Promise<Event | null>;
 		getDetail: (id: string) => Promise<EventDetail>;
 		create: (input: CreateEventInput) => Promise<Event>;
 		update: (id: string, patch: UpdateEventInput) => Promise<Event>;
 		delete: (id: string) => Promise<void>;
-		reorder: (chapterId: string, order: ReorderEntry[]) => Promise<void>;
+		reorder: (chapterId: string, order: Array<ReorderEntry>) => Promise<void>;
 		/**
 		 * Moves this Event to a different Chapter (e.g. "Chapter 1" -> "Chapter
 		 * 2"), even across Collections. `sortOrder` is optional -- if left out,
@@ -318,21 +324,24 @@ export type IpcApi = {
 	};
 
 	eventCharacters: {
-		listByEvent: (eventId: string) => Promise<EventCharacter[]>;
-		listByCharacter: (characterId: string) => Promise<EventCharacter[]>;
+		listByEvent: (eventId: string) => Promise<Array<EventCharacter>>;
+		listByCharacter: (characterId: string) => Promise<Array<EventCharacter>>;
 		add: (input: CreateEventCharacterInput) => Promise<EventCharacter>;
 		remove: (eventId: string, characterId: string) => Promise<void>;
 		reorder: (
 			eventId: string,
-			order: EventCharacterReorderEntry[],
+			order: Array<EventCharacterReorderEntry>,
 		) => Promise<void>;
 	};
 
 	eventTags: {
-		listByEvent: (eventId: string) => Promise<EventTag[]>;
-		listByTag: (tagId: string) => Promise<EventTag[]>;
+		listByEvent: (eventId: string) => Promise<Array<EventTag>>;
+		listByTag: (tagId: string) => Promise<Array<EventTag>>;
 		add: (input: CreateEventTagInput) => Promise<EventTag>;
 		remove: (eventId: string, tagId: string) => Promise<void>;
-		reorder: (eventId: string, order: EventTagReorderEntry[]) => Promise<void>;
+		reorder: (
+			eventId: string,
+			order: Array<EventTagReorderEntry>,
+		) => Promise<void>;
 	};
 };

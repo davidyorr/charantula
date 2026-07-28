@@ -24,6 +24,7 @@ export default defineConfig([
 					],
 				},
 			],
+			"@typescript-eslint/array-type": ["error", { default: "generic" }],
 			"@typescript-eslint/consistent-type-definitions": ["error", "type"],
 		},
 	},
