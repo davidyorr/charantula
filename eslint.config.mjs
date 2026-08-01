@@ -18,8 +18,8 @@ export default defineConfig([
 				{
 					patterns: [
 						{
-							group: ["./*", "../*"],
-							message: "Relative imports are not allowed.",
+							group: ["./*", "../*", "!./*.css", "!../*.css"],
+							message: "Relative imports are not allowed (except CSS imports).",
 						},
 					],
 				},

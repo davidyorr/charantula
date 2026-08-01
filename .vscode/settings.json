@@ -1,5 +1,5 @@
 {
-	"cSpell.words": ["Charantula", "solidjs", "trivago"],
+	"cSpell.words": ["Charantula", "Kobalte", "solidjs", "trivago"],
 	"js/ts.experimental.useTsgo": true,
 	"js/ts.tsdk.path": "./node_modules/@typescript/native"
 }

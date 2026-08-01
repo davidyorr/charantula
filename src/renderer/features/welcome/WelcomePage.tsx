@@ -1,6 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, type Component } from "solid-js";
 
+import { Button } from "@/renderer/shared/Button";
+
+import styles from "./WelcomePage.module.css";
+
 export const WelcomePage: Component = () => {
 	const [busy, setBusy] = createSignal(false);
 	const [error, setError] = createSignal<string | null>(null);
@@ -56,27 +60,27 @@ export const WelcomePage: Component = () => {
 	}
 
 	return (
-		<main>
+		<main class={styles.main}>
 			<header>
 				<h1>Charantula</h1>
 				<p>Organize stories without spoilers</p>
 			</header>
 
-			<section>
-				<button
-					type="button"
+			<section class={styles.section}>
+				<Button
+					variant="primary"
 					onClick={handleCreateProjectClick}
 					disabled={busy()}
 				>
 					Create new project
-				</button>
-				<button
-					type="button"
+				</Button>
+				<Button
+					variant="primary"
 					onClick={handleOpenProjectClick}
 					disabled={busy()}
 				>
 					Open existing project
-				</button>
+				</Button>
 			</section>
 
 			{error() ? <p>{error()}</p> : null}

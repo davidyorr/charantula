@@ -1,23 +1,96 @@
 :root {
+	--font-ui: system-ui, -apple-system, "Segoe UI", sans-serif;
+	/* titles/headers */
+	--font-display: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+	--font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+
+	--text-xs: 0.75rem;
+	--text-sm: 0.8125rem;
+	--text-base: 0.9375rem;
+	--text-md: 1.0625rem;
+	--text-lg: 1.375rem;
+	--text-xl: 1.875rem;
+
+	--space-1: 0.25rem;
+	--space-2: 0.5rem;
+	--space-3: 0.75rem;
+	--space-4: 1rem;
+	--space-5: 1.5rem;
+	--space-6: 2rem;
+
+	--radius-sm: 3px;
+	--radius-md: 6px;
+	--radius-lg: 10px;
+
+	/* elevation */
+	--shadow-sm: 0 1px 2px rgba(28, 24, 21, 0.08);
+	--shadow-md: 0 4px 16px rgba(28, 24, 21, 0.12);
+
+	/* motion */
+	--transition-fast: 120ms ease;
+
+	--focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+:root {
 	color-scheme: light;
-	--bg: #ffffff;
-	--fg: #111111;
-	--muted: #666666;
-	--panel: #f3f3f3;
-	--border: #d0d0d0;
+
+	--bg: #faf7f2;
+	--fg: #1c1815;
+	--muted: #6b6259;
+	--panel: #f1ece3;
+	--panel-raised: #ffffff;
+	--border: #ddd4c7;
+
+	--accent: #8c3b3b;
+	--accent-fg: #fdf6f0;
+	--accent-muted: #d9c3bd;
+
+	--danger: #b13b2f;
+	--danger-fg: #fdf6f0;
 }
 
 :root[data-theme="dark"] {
 	color-scheme: dark;
-	--bg: #111111;
-	--fg: #f5f5f5;
-	--muted: #a0a0a0;
-	--panel: #1b1b1b;
-	--border: #333333;
+
+	--bg: #17140f;
+	--fg: #ede7dc;
+	--muted: #9c9285;
+	--panel: #211d17;
+	--panel-raised: #292420;
+	--border: #38322a;
+
+	--accent: #c17b6b;
+	/* --accent: #04b2d9; */
+	--accent-fg: #1c1310;
+	--accent-muted: #4a332e;
+
+	--danger: #d97662;
+	--danger-fg: #1c1310;
+
+	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
+	--shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
+
+	--focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+}
+
+* {
+	box-sizing: border-box;
 }
 
 body {
+	margin: 0;
 	background: var(--bg);
 	color: var(--fg);
-	font-family: system-ui, sans-serif;
+	font-family: var(--font-ui);
+	font-size: var(--text-base);
+	line-height: 1.5;
+}
+
+h1,
+h2,
+h3 {
+	font-family: var(--font-display);
+	font-weight: 500;
+	margin: 0;
 }

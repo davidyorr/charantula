@@ -41,6 +41,12 @@ export default defineConfig({
 		},
 	},
 
+	css: {
+		modules: {
+			globalModulePaths: [/\\.global\./],
+		},
+	},
+
 	server: {
 		port: 5173,
 		strictPort: true,
