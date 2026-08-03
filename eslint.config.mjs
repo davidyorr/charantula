@@ -18,8 +18,9 @@ export default defineConfig([
 				{
 					patterns: [
 						{
-							group: ["./*", "../*", "!./*.css", "!../*.css"],
-							message: "Relative imports are not allowed (except CSS imports).",
+							group: ["../*"],
+							message:
+								"Use project aliases instead of parent relative imports.",
 						},
 					],
 				},

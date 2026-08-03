@@ -10,7 +10,7 @@ function storePath(): string {
 	return path.join(app.getPath("userData"), "recent-projects.json");
 }
 
-async function readAll(): Promise<RecentProject[]> {
+async function readAll(): Promise<Array<RecentProject>> {
 	try {
 		const raw = await fs.readFile(storePath(), "utf-8");
 		const parsed = JSON.parse(raw);
@@ -24,11 +24,11 @@ async function readAll(): Promise<RecentProject[]> {
 	}
 }
 
-async function writeAll(entries: RecentProject[]): Promise<void> {
+async function writeAll(entries: Array<RecentProject>): Promise<void> {
 	await fs.writeFile(storePath(), JSON.stringify(entries, null, 2), "utf-8");
 }
 
-export async function getRecentProjects(): Promise<RecentProject[]> {
+export async function getRecentProjects(): Promise<Array<RecentProject>> {
 	const entries = await readAll();
 	return entries.sort((a, b) => b.lastOpenedAt - a.lastOpenedAt);
 }

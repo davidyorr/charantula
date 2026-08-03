@@ -1,19 +1,19 @@
-import { closeProject } from "@/main/db";
-import { chaptersHandlers } from "@/main/handlers/chapters";
-import { characterAliasesHandlers } from "@/main/handlers/characterAliases";
-import { characterTagsHandlers } from "@/main/handlers/characterTags";
-import { charactersHandlers } from "@/main/handlers/characters";
-import { collectionsHandlers } from "@/main/handlers/collections";
-import { eventCharactersHandlers } from "@/main/handlers/eventCharacters";
-import { eventTagsHandlers } from "@/main/handlers/eventTags";
-import { eventsHandlers } from "@/main/handlers/events";
-import { metadataHandlers } from "@/main/handlers/metadata";
-import { projectHandlers } from "@/main/handlers/project";
-import { tagsHandlers } from "@/main/handlers/tags";
-import { registerIpcHandlers } from "@/main/registerHandlers";
-
 import { app, BrowserWindow } from "electron";
 import path from "path";
+
+import { closeProject } from "./db";
+import { chaptersHandlers } from "./handlers/chapters";
+import { characterAliasesHandlers } from "./handlers/characterAliases";
+import { characterTagsHandlers } from "./handlers/characterTags";
+import { charactersHandlers } from "./handlers/characters";
+import { collectionsHandlers } from "./handlers/collections";
+import { eventCharactersHandlers } from "./handlers/eventCharacters";
+import { eventTagsHandlers } from "./handlers/eventTags";
+import { eventsHandlers } from "./handlers/events";
+import { metadataHandlers } from "./handlers/metadata";
+import { projectHandlers } from "./handlers/project";
+import { tagsHandlers } from "./handlers/tags";
+import { registerIpcHandlers } from "./registerHandlers";
 
 console.log("Hello from Electron 👋");
 

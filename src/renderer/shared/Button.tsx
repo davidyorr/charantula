@@ -3,18 +3,15 @@ import { splitProps, type JSX } from "solid-js";
 
 import styles from "./Button.module.css";
 
-type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
-type ButtonSize = "sm" | "md";
-
 type Props = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
-	variant?: ButtonVariant;
-	size?: ButtonSize;
+	variant?: "primary" | "secondary" | "ghost" | "danger";
+	size?: "sm" | "md";
 };
 
 /**
  * Wraps Kobalte's Button.
  */
-export function Button(props: Props) {
+export const Button = (props: Props) => {
 	const [local, rest] = splitProps(props, [
 		"variant",
 		"size",
@@ -32,4 +29,4 @@ export function Button(props: Props) {
 			{local.children}
 		</KButton>
 	);
-}
+};

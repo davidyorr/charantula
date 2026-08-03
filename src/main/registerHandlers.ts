@@ -18,7 +18,7 @@ export function registerIpcHandlers(handlers: Partial<HandlerMap>): void {
 
 			// Register the handler in the main process
 			ipcMain.handle(channel, (_event, ...args) =>
-				(fn as (...a: unknown[]) => unknown)(...args),
+				(fn as (...a: Array<unknown>) => unknown)(...args),
 			);
 		}
 	}
