@@ -1,0 +1,32 @@
+.button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	border: none;
+	border-radius: var(--radius-sm);
+	background: transparent;
+	color: var(--muted);
+	font-size: 18px;
+	line-height: 1;
+	cursor: pointer;
+	transition:
+		background-color var(--transition-fast),
+		color var(--transition-fast);
+
+	&:hover {
+		background: var(--panel-raised);
+		color: var(--accent);
+	}
+
+	&:focus-visible {
+		outline: none;
+		box-shadow: var(--focus-ring);
+	}
+
+	&[data-disabled] {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+}

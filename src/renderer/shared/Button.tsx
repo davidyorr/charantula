@@ -1,5 +1,5 @@
 import { Button as KButton } from "@kobalte/core/button";
-import { splitProps, type JSX } from "solid-js";
+import { splitProps, type Component, type JSX } from "solid-js";
 
 import styles from "./Button.module.css";
 
@@ -11,7 +11,7 @@ type Props = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
 /**
  * Wraps Kobalte's Button.
  */
-export const Button = (props: Props) => {
+export const Button: Component<Props> = (props) => {
 	const [local, rest] = splitProps(props, [
 		"variant",
 		"size",
