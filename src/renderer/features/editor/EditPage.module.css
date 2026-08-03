@@ -1,0 +1,11 @@
+.page {
+	display: grid;
+	grid-template-columns: 260px 1fr;
+	height: 100vh;
+	background: var(--bg);
+}
+
+.main {
+	overflow-y: auto;
+	padding: var(--space-6);
+}

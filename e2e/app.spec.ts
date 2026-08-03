@@ -73,7 +73,10 @@ test.describe("Charantula E2E", () => {
 		const urlRegex = new RegExp(`.*#/edit/${projectName}`);
 		await expect(window).toHaveURL(urlRegex);
 		await expect(
-			window.getByRole("heading", { name: `Edit ${projectName}` }),
+			window.getByRole("navigation", { name: "Project outline" }),
+		).toBeVisible();
+		await expect(
+			window.getByText("Select a character or event to start editing."),
 		).toBeVisible();
 	});
 
@@ -119,7 +122,10 @@ test.describe("Charantula E2E", () => {
 		const urlRegex = new RegExp(`.*#/edit/${fixtureName}`);
 		await expect(window).toHaveURL(urlRegex);
 		await expect(
-			window.getByRole("heading", { name: `Edit ${fixtureName}` }),
+			window.getByRole("navigation", { name: "Project outline" }),
+		).toBeVisible();
+		await expect(
+			window.getByText("Select a character or event to start editing."),
 		).toBeVisible();
 	});
 });
