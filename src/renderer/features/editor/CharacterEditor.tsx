@@ -9,7 +9,7 @@ type Props = {
 };
 
 export const CharacterEditor: Component<Props> = (props) => {
-	const character = createMemo(() => project.characters.getCharacter(props.id));
+	const character = createMemo(() => project.characters.get(props.id));
 
 	const handleNameChange = async (e: Event) => {
 		const target = e.target as HTMLInputElement;
@@ -21,7 +21,7 @@ export const CharacterEditor: Component<Props> = (props) => {
 		const updated = await window.api.characters.update(props.id, {
 			name: newName,
 		});
-		project.characters.updateCharacter(updated);
+		project.characters.update(updated);
 	};
 
 	const handleSynopsisChange = async (e: Event) => {
@@ -34,7 +34,7 @@ export const CharacterEditor: Component<Props> = (props) => {
 		const updated = await window.api.characters.update(props.id, {
 			synopsis: newSynopsis,
 		});
-		project.characters.updateCharacter(updated);
+		project.characters.update(updated);
 	};
 
 	return (

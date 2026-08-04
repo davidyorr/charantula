@@ -1,56 +1,71 @@
-import { createResource, createSignal } from "solid-js";
+import { createMemo, createResource, createSignal } from "solid-js";
 
 import type { Character, Collection, ProjectOpenResult } from "@/shared/ipc";
 
 const [current, setCurrent] = createSignal<ProjectOpenResult | null>(null);
 
-const [collectionsData, { mutate: mutateCollections }] = createResource(
-	current,
-	async () => window.api.collections.list(),
+/**
+ * Reusable factory for standard CRUD operations on project entities.
+ */
+function createEntityStore<T extends { id: string }>(
+	fetcher: () => Promise<Array<T>>,
+) {
+	// Fetch array, but convert to a Dictionary: { [id]: T }
+	const [resource, { mutate }] = createResource(current, async () => {
+		const items = await fetcher();
+		const dict: Record<string, T> = {};
+		for (const item of items) {
+			dict[item.id] = item;
+		}
+		return dict;
+	});
+
+	// Memoize the array conversion so we don't create a new array on every read
+	const list = createMemo(() => {
+		const dict = resource();
+		return dict ? Object.values(dict) : [];
+	});
+
+	return {
+		// Expose the raw resource for UI access to .loading, .error, .state
+		resource,
+		list,
+		get: (id: string) => {
+			return resource()?.[id];
+		},
+		add: (created: T) =>
+			mutate((prev) =>
+				prev ? { ...prev, [created.id]: created } : { [created.id]: created },
+			),
+		update: (updated: T) =>
+			mutate((prev) =>
+				prev ? { ...prev, [updated.id]: updated } : { [updated.id]: updated },
+			),
+		remove: (id: string) =>
+			mutate((prev) => {
+				if (!prev) {
+					return prev;
+				}
+				const copy = { ...prev };
+				delete copy[id];
+				return copy;
+			}),
+	};
+}
+
+// -----------------------------------------------------------------------------
+// Entity Stores
+// -----------------------------------------------------------------------------
+const collections = createEntityStore<Collection>(async () =>
+	window.api.collections.list(),
+);
+const characters = createEntityStore<Character>(async () =>
+	window.api.characters.list(),
 );
 
-function updateCollection(updated: Collection) {
-	mutateCollections((prev) =>
-		prev?.map((c) => (c.id === updated.id ? updated : c)),
-	);
-}
-
-function addCollection(created: Collection) {
-	mutateCollections((prev) => (prev ? [...prev, created] : [created]));
-}
-
-const collections = {
-	data: collectionsData,
-	updateCollection,
-	addCollection,
-};
-
-const [charactersData, { mutate: mutateCharacters }] = createResource(
-	current,
-	async () => window.api.characters.list(),
-);
-
-function updateCharacter(updated: Character) {
-	mutateCharacters((prev) =>
-		prev?.map((c) => (c.id === updated.id ? updated : c)),
-	);
-}
-
-function addCharacter(created: Character) {
-	mutateCharacters((prev) => (prev ? [...prev, created] : [created]));
-}
-
-function getCharacter(id: string) {
-	return characters.data()?.find((c) => c.id === id);
-}
-
-const characters = {
-	data: charactersData,
-	updateCharacter,
-	addCharacter,
-	getCharacter,
-};
-
+// -----------------------------------------------------------------------------
+// Exports
+// -----------------------------------------------------------------------------
 export const project = {
 	current,
 	setCurrent,

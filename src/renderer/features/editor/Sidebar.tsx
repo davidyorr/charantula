@@ -15,7 +15,7 @@ export const Sidebar: Component = () => {
 		const newCollection = await window.api.collections.create({
 			title: "New Collection",
 		});
-		project.collections.addCollection(newCollection);
+		project.collections.add(newCollection);
 	};
 
 	const handleAddCharacter = async (e: MouseEvent) => {
@@ -24,7 +24,7 @@ export const Sidebar: Component = () => {
 		const newCharacter = await window.api.characters.create({
 			name: "New Character",
 		});
-		project.characters.addCharacter(newCharacter);
+		project.characters.add(newCharacter);
 
 		// Automatically select the new character
 		editorStore.actions.select({ kind: "character", id: newCharacter.id });
@@ -42,7 +42,7 @@ export const Sidebar: Component = () => {
 					</IconButton>
 				}
 			>
-				<For each={project.collections.data()}>
+				<For each={project.collections.list()}>
 					{(collection) => (
 						<Collapsible label={collection.title} variant="node" indent={1}>
 							{/* Nested chapters will go here in the future */}
@@ -61,7 +61,7 @@ export const Sidebar: Component = () => {
 					</IconButton>
 				}
 			>
-				<For each={project.characters.data()}>
+				<For each={project.characters.list()}>
 					{(character) => {
 						const isSelected = () =>
 							editorStore.state.selection?.kind === "character" &&
