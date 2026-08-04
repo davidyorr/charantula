@@ -53,7 +53,7 @@ test.describe("Charantula E2E", () => {
 		).toBeVisible();
 	});
 
-	test("successfully creates a new project and navigates to edit page", async () => {
+	test("successfully creates and edits a project", async () => {
 		const projectName = `TestProject_${Date.now()}`;
 		const tempFilePath = path.join(os.tmpdir(), `${projectName}.charantula`);
 		tempFilesToCleanup.push(tempFilePath);
@@ -69,7 +69,7 @@ test.describe("Charantula E2E", () => {
 
 		await window.getByRole("button", { name: "Create new project" }).click();
 
-		// assert
+		// assert initial navigation and empty state
 		const urlRegex = new RegExp(`.*#/edit/${projectName}`);
 		await expect(window).toHaveURL(urlRegex);
 		await expect(
@@ -78,6 +78,46 @@ test.describe("Charantula E2E", () => {
 		await expect(
 			window.getByText("Select a character or event to start editing."),
 		).toBeVisible();
+
+		// --- ADD FIRST CHARACTER ---
+		await window.getByRole("button", { name: "Add character" }).click();
+
+		// Verify the CharacterEditor rendered with the default name
+		const nameInput = window.getByPlaceholder("Character Name");
+		await expect(nameInput).toBeVisible();
+		await expect(nameInput).toHaveValue("New Character");
+
+		// Edit the character's name and synopsis
+		await nameInput.fill("Frodo Baggins");
+		await nameInput.blur();
+
+		const synopsisInput = window.getByPlaceholder(
+			"A brief, spoiler-free summary of the character...",
+		);
+		await synopsisInput.fill("Hobbit from The Shire.");
+		await synopsisInput.blur();
+
+		// Verify the sidebar updated with the new name
+		await expect(
+			window.getByRole("button", { name: "Frodo Baggins" }),
+		).toBeVisible();
+
+		// --- ADD SECOND CHARACTER ---
+		await window.getByRole("button", { name: "Add character" }).click();
+
+		// Verify the editor reset to the new character's default state
+		await expect(nameInput).toHaveValue("New Character");
+		await expect(synopsisInput).toHaveValue("");
+
+		// Edit the second character
+		await nameInput.fill("Gandalf");
+		await nameInput.blur();
+
+		// Verify both characters now exist in the sidebar
+		await expect(
+			window.getByRole("button", { name: "Frodo Baggins" }),
+		).toBeVisible();
+		await expect(window.getByRole("button", { name: "Gandalf" })).toBeVisible();
 	});
 
 	test("does nothing if the user cancels the native dialog", async () => {
