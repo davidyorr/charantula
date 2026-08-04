@@ -2,6 +2,7 @@ import { useNavigate } from "@solidjs/router";
 import { createSignal, type Component } from "solid-js";
 
 import { Button } from "@/renderer/shared/Button";
+import { project } from "@/renderer/shared/projectStore";
 
 import styles from "./WelcomePage.module.css";
 
@@ -27,6 +28,7 @@ export const WelcomePage: Component = () => {
 				path,
 				projectName,
 			});
+			project.setCurrent(result);
 
 			navigate(`/edit/${encodeURIComponent(result.metadata.projectName)}`);
 		} catch (error) {
@@ -48,6 +50,7 @@ export const WelcomePage: Component = () => {
 			}
 
 			const result = await window.api.project.open({ path });
+			project.setCurrent(result);
 
 			navigate(`/edit/${encodeURIComponent(result.metadata.projectName)}`);
 		} catch (error) {
