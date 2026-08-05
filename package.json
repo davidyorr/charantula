@@ -6,6 +6,7 @@
 	"main": "dist/main/main.js",
 	"scripts": {
 		"dev": "vite",
+		"dev:project": "VITE_AUTO_LOAD_PROJECT=true vite",
 		"build": "vite build",
 		"start": "electron .",
 		"test": "npm run build && npx playwright test",

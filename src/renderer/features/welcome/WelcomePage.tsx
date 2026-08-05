@@ -1,5 +1,5 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, type Component } from "solid-js";
+import { createSignal, onMount, type Component } from "solid-js";
 
 import { Button } from "@/renderer/shared/Button";
 import { project } from "@/renderer/shared/projectStore";
@@ -11,6 +11,13 @@ export const WelcomePage: Component = () => {
 	const [error, setError] = createSignal<string | null>(null);
 
 	const navigate = useNavigate();
+
+	async function openProject(
+		result: Awaited<ReturnType<typeof window.api.project.open>>,
+	) {
+		project.setCurrent(result);
+		navigate(`/edit/${encodeURIComponent(result.metadata.projectName)}`);
+	}
 
 	async function handleCreateProjectClick() {
 		setBusy(true);
@@ -28,9 +35,7 @@ export const WelcomePage: Component = () => {
 				path,
 				projectName,
 			});
-			project.setCurrent(result);
-
-			navigate(`/edit/${encodeURIComponent(result.metadata.projectName)}`);
+			await openProject(result);
 		} catch (error) {
 			setError(
 				error instanceof Error ? error.message : "Failed to create project",
@@ -50,9 +55,7 @@ export const WelcomePage: Component = () => {
 			}
 
 			const result = await window.api.project.open({ path });
-			project.setCurrent(result);
-
-			navigate(`/edit/${encodeURIComponent(result.metadata.projectName)}`);
+			await openProject(result);
 		} catch (error) {
 			setError(
 				error instanceof Error ? error.message : "Failed to open project",
@@ -61,6 +64,37 @@ export const WelcomePage: Component = () => {
 			setBusy(false);
 		}
 	}
+
+	onMount(async function autoLoadProjectIfRequested() {
+		if (!import.meta.env.DEV) {
+			return;
+		}
+
+		const autoLoad = import.meta.env.VITE_AUTO_LOAD_PROJECT;
+		const projectPath = import.meta.env.VITE_PROJECT_PATH;
+
+		if (autoLoad) {
+			if (!projectPath) {
+				setError(
+					"Auto load project by setting VITE_PROJECT_PATH in .env.local using an absolute path",
+				);
+				return;
+			}
+
+			setBusy(true);
+
+			try {
+				const result = await window.api.project.open({ path: projectPath });
+				await openProject(result);
+			} catch (error) {
+				setError(
+					error instanceof Error ? error.message : "Failed to open dev project",
+				);
+			} finally {
+				setBusy(false);
+			}
+		}
+	});
 
 	return (
 		<main class={styles.main}>
