@@ -1,6 +1,6 @@
-import type { IpcApi } from "@/shared/ipc";
-
 import { contextBridge, ipcRenderer } from "electron";
+
+import type { IpcApi } from "@/shared/ipc";
 
 const api: IpcApi = {
 	project: {
@@ -26,6 +26,7 @@ const api: IpcApi = {
 	chapters: {
 		listByCollection: (id) =>
 			ipcRenderer.invoke("chapters:listByCollection", id),
+		list: () => ipcRenderer.invoke("chapters:list"),
 		get: (id) => ipcRenderer.invoke("chapters:get", id),
 		create: (input) => ipcRenderer.invoke("chapters:create", input),
 		update: (id, patch) => ipcRenderer.invoke("chapters:update", id, patch),
@@ -45,6 +46,8 @@ const api: IpcApi = {
 		update: (id, patch) => ipcRenderer.invoke("characters:update", id, patch),
 		delete: (id) => ipcRenderer.invoke("characters:delete", id),
 		reorder: (order) => ipcRenderer.invoke("characters:reorder", order),
+		resolveIdByName: (name) =>
+			ipcRenderer.invoke("characters:resolveIdByName", name),
 	},
 	characterAliases: {
 		listByCharacter: (id) =>
@@ -78,6 +81,7 @@ const api: IpcApi = {
 	},
 	events: {
 		listByChapter: (id) => ipcRenderer.invoke("events:listByChapter", id),
+		list: () => ipcRenderer.invoke("events:list"),
 		get: (id) => ipcRenderer.invoke("events:get", id),
 		getDetail: (id) => ipcRenderer.invoke("events:getDetail", id),
 		create: (input) => ipcRenderer.invoke("events:create", input),

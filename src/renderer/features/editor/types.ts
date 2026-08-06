@@ -1,2 +1,6 @@
 export type Selection =
-	{ kind: "event"; id: string } | { kind: "character"; id: string } | null;
+	| { kind: "collection"; id: string }
+	| { kind: "chapter"; id: string }
+	| { kind: "event"; id: string }
+	| { kind: "character"; id: string }
+	| null;

@@ -72,11 +72,11 @@ test.describe("Charantula E2E", () => {
 		// assert initial navigation and empty state
 		const urlRegex = new RegExp(`.*#/edit/${projectName}`);
 		await expect(window).toHaveURL(urlRegex);
+
+		const sidebar = window.getByRole("navigation", { name: "Project outline" });
+		await expect(sidebar).toBeVisible();
 		await expect(
-			window.getByRole("navigation", { name: "Project outline" }),
-		).toBeVisible();
-		await expect(
-			window.getByText("Select a character or event to start editing."),
+			window.getByText("Select an item from the sidebar to start editing."),
 		).toBeVisible();
 
 		// --- ADD FIRST CHARACTER ---
@@ -99,7 +99,7 @@ test.describe("Charantula E2E", () => {
 
 		// Verify the sidebar updated with the new name
 		await expect(
-			window.getByRole("button", { name: "Frodo Baggins" }),
+			sidebar.getByRole("button", { name: "Frodo Baggins" }),
 		).toBeVisible();
 
 		// --- ADD SECOND CHARACTER ---
@@ -115,9 +115,65 @@ test.describe("Charantula E2E", () => {
 
 		// Verify both characters now exist in the sidebar
 		await expect(
-			window.getByRole("button", { name: "Frodo Baggins" }),
+			sidebar.getByRole("button", { name: "Frodo Baggins" }),
 		).toBeVisible();
-		await expect(window.getByRole("button", { name: "Gandalf" })).toBeVisible();
+		await expect(
+			sidebar.getByRole("button", { name: "Gandalf" }),
+		).toBeVisible();
+
+		// --- ADD COLLECTION ---
+		await window.getByRole("button", { name: "Add collection" }).click();
+
+		const collectionNameInput = window.getByPlaceholder(
+			"Collection Title (e.g. Fellowship of the Ring)",
+		);
+		await expect(collectionNameInput).toBeVisible();
+		await expect(collectionNameInput).toHaveValue("New Collection");
+
+		await collectionNameInput.fill("Fellowship of the Ring");
+		await collectionNameInput.blur();
+
+		await expect(sidebar.getByText("Fellowship of the Ring")).toBeVisible();
+
+		// --- ADD CHAPTER ---
+		await sidebar.getByRole("button", { name: "Add chapter" }).click();
+
+		const chapterNameInput = window.getByPlaceholder(
+			"Chapter Title (e.g. Chapter 1)",
+		);
+		await expect(chapterNameInput).toBeVisible();
+		await expect(chapterNameInput).toHaveValue("New Chapter");
+
+		await chapterNameInput.fill("Chapter 1");
+		await chapterNameInput.blur();
+
+		const subtitleInput = window.getByPlaceholder("e.g. A Long-Expected Party");
+		await subtitleInput.fill("A Long-expected Party");
+		await subtitleInput.blur();
+
+		// Open the Collection collapsible so the Chapter is visible
+		await sidebar.getByText("Fellowship of the Ring").click();
+		await expect(sidebar.getByText("Chapter 1")).toBeVisible();
+
+		// --- ADD EVENT ---
+		await sidebar.getByRole("button", { name: "Add event" }).click();
+
+		const eventNameInput = window.getByPlaceholder("Event Title");
+		await expect(eventNameInput).toBeVisible();
+		await expect(eventNameInput).toHaveValue("New Event");
+
+		await eventNameInput.fill("Gandalf arrives");
+		await eventNameInput.blur();
+
+		const contentInput = window.getByPlaceholder("Content");
+		await contentInput.fill("[Gandalf] arrives in the Shire");
+		await contentInput.blur();
+
+		// Open the Chapter collapsible so the Event is visible
+		await sidebar.getByText("Chapter 1").click();
+		await expect(
+			sidebar.getByRole("button", { name: "Gandalf arrives" }),
+		).toBeVisible();
 	});
 
 	test("does nothing if the user cancels the native dialog", async () => {
@@ -165,7 +221,7 @@ test.describe("Charantula E2E", () => {
 			window.getByRole("navigation", { name: "Project outline" }),
 		).toBeVisible();
 		await expect(
-			window.getByText("Select a character or event to start editing."),
+			window.getByText("Select an item from the sidebar to start editing."),
 		).toBeVisible();
 	});
 });

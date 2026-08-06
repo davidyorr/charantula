@@ -15,6 +15,11 @@ export const chaptersHandlers: IpcApi["chapters"] = {
 			.orderBy(chapters.sortOrder);
 	},
 
+	async list() {
+		const db = getDb();
+		return db.select().from(chapters).orderBy(chapters.sortOrder);
+	},
+
 	async get(id) {
 		const db = getDb();
 		const [row] = await db.select().from(chapters).where(eq(chapters.id, id));

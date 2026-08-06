@@ -84,6 +84,11 @@ export const eventsHandlers: IpcApi["events"] = {
 			.orderBy(events.sortOrder);
 	},
 
+	async list() {
+		const db = getDb();
+		return db.select().from(events).orderBy(events.sortOrder);
+	},
+
 	async get(id) {
 		const db = getDb();
 		const [row] = await db.select().from(events).where(eq(events.id, id));

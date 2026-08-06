@@ -1,3 +1,5 @@
+import { eq, inArray, like } from "drizzle-orm";
+
 import {
 	chapters,
 	characterAliases,
@@ -9,8 +11,6 @@ import {
 import { getDb, type DrizzleDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
 import type { IpcApi } from "@/shared/ipc";
-
-import { eq, inArray } from "drizzle-orm";
 
 async function getCharacterDetailInternal(db: DrizzleDb, id: string) {
 	const [character] = await db
@@ -59,7 +59,7 @@ type ChapterPosition = {
  */
 async function resolveChapterPositions(
 	db: DrizzleDb,
-	chapterIds: string[],
+	chapterIds: Array<string>,
 ): Promise<Map<string, ChapterPosition>> {
 	if (chapterIds.length === 0) {
 		return new Map();
@@ -209,5 +209,18 @@ export const charactersHandlers: IpcApi["characters"] = {
 					.run();
 			}
 		});
+	},
+
+	async resolveIdByName(name) {
+		const db = getDb();
+
+		const [char] = await db
+			.select({ id: characters.id })
+			.from(characters)
+			.where(like(characters.name, name));
+
+		return char?.id ?? null;
+
+		// Fall back to alias?
 	},
 };

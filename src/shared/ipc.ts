@@ -228,6 +228,7 @@ export type IpcApi = {
 
 	chapters: {
 		listByCollection: (collectionId: string) => Promise<Array<Chapter>>;
+		list: () => Promise<Array<Chapter>>;
 		get: (id: string) => Promise<Chapter | null>;
 		create: (input: CreateChapterInput) => Promise<Chapter>;
 		update: (id: string, patch: UpdateChapterInput) => Promise<Chapter>;
@@ -261,6 +262,7 @@ export type IpcApi = {
 		update: (id: string, patch: UpdateCharacterInput) => Promise<Character>;
 		delete: (id: string) => Promise<void>;
 		reorder: (order: Array<ReorderEntry>) => Promise<void>;
+		resolveIdByName: (name: string) => Promise<string | null>;
 	};
 
 	characterAliases: {
@@ -305,6 +307,7 @@ export type IpcApi = {
 
 	events: {
 		listByChapter: (chapterId: string) => Promise<Array<Event>>;
+		list: () => Promise<Array<Event>>;
 		get: (id: string) => Promise<Event | null>;
 		getDetail: (id: string) => Promise<EventDetail>;
 		create: (input: CreateEventInput) => Promise<Event>;

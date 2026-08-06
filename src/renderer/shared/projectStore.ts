@@ -1,6 +1,12 @@
 import { createMemo, createResource, createSignal } from "solid-js";
 
-import type { Character, Collection, ProjectOpenResult } from "@/shared/ipc";
+import type {
+	Chapter,
+	Character,
+	Collection,
+	Event,
+	ProjectOpenResult,
+} from "@/shared/ipc";
 
 const [current, setCurrent] = createSignal<ProjectOpenResult | null>(null);
 
@@ -59,6 +65,10 @@ function createEntityStore<T extends { id: string }>(
 const collections = createEntityStore<Collection>(async () =>
 	window.api.collections.list(),
 );
+const chapters = createEntityStore<Chapter>(async () =>
+	window.api.chapters.list(),
+);
+const events = createEntityStore<Event>(async () => window.api.events.list());
 const characters = createEntityStore<Character>(async () =>
 	window.api.characters.list(),
 );
@@ -70,5 +80,7 @@ export const project = {
 	current,
 	setCurrent,
 	collections,
+	chapters,
+	events,
 	characters,
 };

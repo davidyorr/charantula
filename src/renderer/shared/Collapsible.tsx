@@ -12,6 +12,8 @@ type Props = {
 	action?: JSX.Element;
 	class?: string;
 	children?: JSX.Element;
+	selected?: boolean;
+	onClick?: (e: MouseEvent) => void;
 };
 
 export const Collapsible: Component<Props> = (props) => {
@@ -23,6 +25,8 @@ export const Collapsible: Component<Props> = (props) => {
 		"action",
 		"class",
 		"children",
+		"selected",
+		"onClick",
 	]);
 
 	return (
@@ -32,12 +36,14 @@ export const Collapsible: Component<Props> = (props) => {
 		>
 			<div
 				class={`${styles.header} ${local.variant === "section" ? styles.section : ""}`.trim()}
+				data-selected={local.selected ? "" : undefined}
 			>
 				<KCollapsible.Trigger
 					class={`${styles.trigger} ${local.variant === "section" ? styles.section : ""}`.trim()}
 					style={{
 						"padding-left": `calc(var(--space-3) + ${local.indent ?? 0} * var(--indent-step))`,
 					}}
+					{...(local.onClick ? { onClick: local.onClick } : {})}
 				>
 					<span class={styles.chevron} aria-hidden="true">
 						<ChevronRight size={14} strokeWidth={2.5} />
