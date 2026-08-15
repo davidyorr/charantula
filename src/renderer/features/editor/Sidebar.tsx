@@ -1,11 +1,12 @@
 import { Plus } from "lucide-solid";
-import { For, type Component } from "solid-js";
+import { For, Show, type Component } from "solid-js";
 
 import { editorStore } from "@/renderer/features/editor/store";
 import { Collapsible } from "@/renderer/shared/Collapsible";
 import { IconButton } from "@/renderer/shared/IconButton";
 import { project } from "@/renderer/shared/projectStore";
 
+import { DragWrapper } from "./DragWrapper";
 import styles from "./Sidebar.module.css";
 
 export const Sidebar: Component = () => {
@@ -32,14 +33,9 @@ export const Sidebar: Component = () => {
 		editorStore.actions.select({ kind: "chapter", id: newChapter.id });
 	};
 
-	const handleAddEvent = async (
-		e: MouseEvent,
-		collectionId: string,
-		chapterId: string,
-	) => {
+	const handleAddEvent = async (e: MouseEvent, chapterId: string) => {
 		e.stopPropagation();
 		const newEvent = await window.api.events.create({
-			collectionId,
 			chapterId,
 			title: "New Event",
 		});
@@ -70,80 +66,123 @@ export const Sidebar: Component = () => {
 			>
 				<For each={project.collections.list()}>
 					{(collection) => (
-						<Collapsible
-							label={collection.title}
-							variant="node"
-							indent={1}
-							selected={isSelected("collection", collection.id)}
-							onClick={() =>
-								editorStore.actions.select({
-									kind: "collection",
-									id: collection.id,
-								})
-							}
-							action={
-								<IconButton
-									label="Add chapter"
-									onClick={(e) => handleAddChapter(e, collection.id)}
-								>
-									<Plus size={16} />
-								</IconButton>
-							}
-						>
-							<For
-								each={project.chapters
-									.list()
-									.filter((c) => c.collectionId === collection.id)}
-							>
-								{(chapter) => (
-									<Collapsible
-										label={chapter.title}
-										variant="node"
-										indent={2}
-										selected={isSelected("chapter", chapter.id)}
-										onClick={() =>
-											editorStore.actions.select({
-												kind: "chapter",
-												id: chapter.id,
-											})
-										}
-										action={
-											<IconButton
-												label="Add event"
-												onClick={(e) =>
-													handleAddEvent(e, collection.id, chapter.id)
-												}
-											>
-												<Plus size={16} />
-											</IconButton>
-										}
+						<DragWrapper kind="collection" id={collection.id} acceptsChildren>
+							<Collapsible
+								label={collection.title}
+								variant="node"
+								indent={1}
+								selected={isSelected("collection", collection.id)}
+								onClick={() =>
+									editorStore.actions.select({
+										kind: "collection",
+										id: collection.id,
+									})
+								}
+								action={
+									<IconButton
+										label="Add chapter"
+										onClick={(e) => handleAddChapter(e, collection.id)}
 									>
-										<For
-											each={project.events
-												.list()
-												.filter((ev) => ev.chapterId === chapter.id)}
-										>
-											{(event) => (
-												<button
-													class={styles.leafNode}
-													data-selected={
-														isSelected("event", event.id) ? "" : undefined
-													}
+										<Plus size={16} />
+									</IconButton>
+								}
+							>
+								<Show
+									when={
+										project.chapters
+											.list()
+											.filter((c) => c.collectionId === collection.id).length >
+										0
+									}
+									fallback={
+										<div style="padding: 6px 8px; margin-left: 24px; color: var(--muted); font-size: 12px;">
+											No chapters yet
+										</div>
+									}
+								>
+									<For
+										each={project.chapters
+											.list()
+											.filter((c) => c.collectionId === collection.id)}
+									>
+										{(chapter) => (
+											<DragWrapper
+												kind="chapter"
+												id={chapter.id}
+												parentId={collection.id}
+												acceptsChildren
+											>
+												<Collapsible
+													label={chapter.title}
+													variant="node"
+													indent={2}
+													selected={isSelected("chapter", chapter.id)}
 													onClick={() =>
 														editorStore.actions.select({
-															kind: "event",
-															id: event.id,
+															kind: "chapter",
+															id: chapter.id,
 														})
 													}
+													action={
+														<IconButton
+															label="Add event"
+															onClick={(e) => handleAddEvent(e, chapter.id)}
+														>
+															<Plus size={16} />
+														</IconButton>
+													}
 												>
-													{event.title}
-												</button>
-											)}
-										</For>
-									</Collapsible>
-								)}
-							</For>
-						</Collapsible>
+													<Show
+														when={
+															project.events
+																.list()
+																.filter((ev) => ev.chapterId === chapter.id)
+																.length > 0
+														}
+														fallback={
+															<div style="padding: 6px 8px; margin-left: 48px; color: var(--muted); font-size: 12px;">
+																No events yet
+															</div>
+														}
+													>
+														<For
+															each={project.events
+																.list()
+																.filter((ev) => ev.chapterId === chapter.id)}
+														>
+															{(event) => (
+																<DragWrapper
+																	kind="event"
+																	id={event.id}
+																	parentId={chapter.id}
+																>
+																	<button
+																		class={styles.leafNode}
+																		data-selected={
+																			isSelected("event", event.id)
+																				? ""
+																				: undefined
+																		}
+																		onClick={() =>
+																			editorStore.actions.select({
+																				kind: "event",
+																				id: event.id,
+																			})
+																		}
+																	>
+																		{event.title}
+																	</button>
+																</DragWrapper>
+															)}
+														</For>
+													</Show>
+												</Collapsible>
+											</DragWrapper>
+										)}
+									</For>
+								</Show>
+							</Collapsible>
+						</DragWrapper>
 					)}
 				</For>
 			</Collapsible>
@@ -160,20 +199,22 @@ export const Sidebar: Component = () => {
 			>
 				<For each={project.characters.list()}>
 					{(character) => (
-						<button
-							class={styles.leafNode}
-							data-selected={
-								isSelected("character", character.id) ? "" : undefined
-							}
-							onClick={() =>
-								editorStore.actions.select({
-									kind: "character",
-									id: character.id,
-								})
-							}
-						>
-							{character.name}
-						</button>
+						<DragWrapper kind="character" id={character.id}>
+							<button
+								class={styles.leafNode}
+								data-selected={
+									isSelected("character", character.id) ? "" : undefined
+								}
+								onClick={() =>
+									editorStore.actions.select({
+										kind: "character",
+										id: character.id,
+									})
+								}
+							>
+								{character.name}
+							</button>
+						</DragWrapper>
 					)}
 				</For>
 			</Collapsible>

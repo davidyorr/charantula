@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import {
 	chapters,
@@ -11,31 +11,6 @@ import {
 import { getDb, type DrizzleDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
 import type { IpcApi } from "@/shared/ipc";
-
-/**
- * Not required by the contract, but gives a clear error before the raw sqlite
- * FK-violation message would otherwise surface for a caller mistake.
- */
-async function assertChapterInCollection(
-	db: DrizzleDb,
-	chapterId: string,
-	collectionId: string,
-): Promise<void> {
-	const [chapter] = await db
-		.select({
-			collectionId: chapters.collectionId,
-		})
-		.from(chapters)
-		.where(eq(chapters.id, chapterId));
-	if (!chapter) {
-		throw new Error(`Chapter "${chapterId}" not found.`);
-	}
-	if (chapter.collectionId !== collectionId) {
-		throw new Error(
-			`Chapter "${chapterId}" belongs to collection "${chapter.collectionId}", not "${collectionId}".`,
-		);
-	}
-}
 
 async function getEventDetailInternal(db: DrizzleDb, id: string) {
 	const [event] = await db.select().from(events).where(eq(events.id, id));
@@ -102,7 +77,6 @@ export const eventsHandlers: IpcApi["events"] = {
 
 	async create(input) {
 		const db = getDb();
-		await assertChapterInCollection(db, input.chapterId, input.collectionId);
 		const sortOrder =
 			input.sortOrder ??
 			(await nextSortOrder(
@@ -121,17 +95,13 @@ export const eventsHandlers: IpcApi["events"] = {
 	async update(id, patch) {
 		const db = getDb();
 
-		const { chapterId, collectionId, sortOrder, ...safePatch } = patch as {
+		const { chapterId, sortOrder, ...safePatch } = patch as {
 			chapterId?: never;
-			collectionId?: never;
 			sortOrder?: never;
 		};
 
 		if (chapterId !== undefined) {
 			throw new Error('Use "move()" to change an event chapter.');
-		}
-		if (collectionId !== undefined) {
-			throw new Error("Events inherit collection from their chapter.");
 		}
 		if (sortOrder !== undefined) {
 			throw new Error('Use "reorder()" to change event ordering.');
@@ -153,13 +123,14 @@ export const eventsHandlers: IpcApi["events"] = {
 		await db.delete(events).where(eq(events.id, id));
 	},
 
-	async reorder(_chapterId, order) {
+	// only reorder if it belongs to the specified chapter
+	async reorder(chapterId, order) {
 		const db = getDb();
 		db.transaction((tx) => {
 			for (const entry of order) {
 				tx.update(events)
 					.set({ sortOrder: entry.sortOrder })
-					.where(eq(events.id, entry.id))
+					.where(and(eq(events.id, entry.id), eq(events.chapterId, chapterId)))
 					.run();
 			}
 		});
@@ -168,7 +139,7 @@ export const eventsHandlers: IpcApi["events"] = {
 	async move(id, targetChapterId, sortOrder) {
 		const db = getDb();
 		const [targetChapter] = await db
-			.select({ collectionId: chapters.collectionId })
+			.select({ id: chapters.id })
 			.from(chapters)
 			.where(eq(chapters.id, targetChapterId));
 		if (!targetChapter) {
@@ -188,7 +159,6 @@ export const eventsHandlers: IpcApi["events"] = {
 			.update(events)
 			.set({
 				chapterId: targetChapterId,
-				collectionId: targetChapter.collectionId, // keeps the composite FK satisfied
 				sortOrder: resolvedSortOrder,
 			})
 			.where(eq(events.id, id))

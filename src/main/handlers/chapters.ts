@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { chapters } from "@/db/schema";
 import { getDb } from "@/main/db";
@@ -74,16 +74,19 @@ export const chaptersHandlers: IpcApi["chapters"] = {
 		await db.delete(chapters).where(eq(chapters.id, id));
 	},
 
-	// collectionId isn't needed for the update itself -- each entry.id already
-	// uniquely identifies its row -- it's accepted for parity with the
-	// contract and so callers can scope optimistic UI updates.
-	async reorder(_collectionId, order) {
+	// only reorder if it belongs to the specified collection
+	async reorder(collectionId, order) {
 		const db = getDb();
 		db.transaction((tx) => {
 			for (const entry of order) {
 				tx.update(chapters)
 					.set({ sortOrder: entry.sortOrder })
-					.where(eq(chapters.id, entry.id))
+					.where(
+						and(
+							eq(chapters.id, entry.id),
+							eq(chapters.collectionId, collectionId),
+						),
+					)
 					.run();
 			}
 		});

@@ -1,0 +1,42 @@
+.dragWrapper {
+	position: relative;
+	display: block;
+	transition: opacity var(--transition-fast);
+}
+
+.dragging {
+	opacity: 0.4;
+}
+
+.dropIndicator {
+	position: absolute;
+	left: 0;
+	right: 0;
+	height: 2px;
+	background: var(--accent);
+	z-index: 10;
+	pointer-events: none;
+}
+
+.dropIndicatorTop {
+	top: 0;
+}
+
+.dropIndicatorBottom {
+	bottom: 0;
+}
+
+.parentDropTarget {
+	border: 1px dashed var(--accent);
+	background: var(--panel-raised);
+	border-radius: var(--radius-sm);
+
+	&::after {
+		position: absolute;
+		right: var(--space-2);
+		top: 50%;
+		transform: translateY(-50%);
+		color: var(--accent);
+		pointer-events: none;
+	}
+}

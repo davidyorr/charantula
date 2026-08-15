@@ -37,7 +37,6 @@ import {
 	text,
 	integer,
 	primaryKey,
-	foreignKey,
 	unique,
 	index,
 	check,
@@ -272,8 +271,11 @@ export const events = sqliteTable(
 		id: text("id")
 			.primaryKey()
 			.$defaultFn(() => randomUUID()),
-		collectionId: text("collection_id").notNull(),
-		chapterId: text("chapter_id").notNull(),
+		chapterId: text("chapter_id")
+			.notNull()
+			.references(() => chapters.id, {
+				onDelete: "cascade",
+			}),
 
 		title: text("title").notNull(),
 
@@ -319,15 +321,6 @@ export const events = sqliteTable(
 			.$onUpdate(() => sql`(unixepoch())`),
 	},
 	(table) => [
-		// Guarantees the Chapter actually belongs to this Event's Collection --
-		// the one place cross-entity mismatch is still possible, since
-		// a project contains multiple Collections.
-		foreignKey({
-			columns: [table.chapterId, table.collectionId],
-			foreignColumns: [chapters.id, chapters.collectionId],
-			name: "events_chapter_collection_fk",
-		}).onDelete("cascade"),
-		index("idx_events_collection").on(table.collectionId),
 		index("idx_events_chapter").on(table.chapterId, table.sortOrder),
 		check("events_sort_order_check", sql`${table.sortOrder} >= 0`),
 		check(
