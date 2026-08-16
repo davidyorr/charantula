@@ -96,3 +96,10 @@ h3 {
 	font-weight: 500;
 	margin: 0;
 }
+
+button,
+input,
+textarea,
+select {
+	font: inherit;
+}

@@ -4,6 +4,7 @@ import { For, Show, type Component } from "solid-js";
 import { editorStore } from "@/renderer/features/editor/store";
 import { Collapsible } from "@/renderer/shared/Collapsible";
 import { IconButton } from "@/renderer/shared/IconButton";
+import { TreeNode } from "@/renderer/shared/TreeNode";
 import { project } from "@/renderer/shared/projectStore";
 
 import { DragWrapper } from "./DragWrapper";
@@ -156,13 +157,9 @@ export const Sidebar: Component = () => {
 																	id={event.id}
 																	parentId={chapter.id}
 																>
-																	<button
-																		class={styles.leafNode}
-																		data-selected={
-																			isSelected("event", event.id)
-																				? ""
-																				: undefined
-																		}
+																	<TreeNode
+																		indent={3}
+																		selected={isSelected("event", event.id)}
 																		onClick={() =>
 																			editorStore.actions.select({
 																				kind: "event",
@@ -171,7 +168,7 @@ export const Sidebar: Component = () => {
 																		}
 																	>
 																		{event.title}
-																	</button>
+																	</TreeNode>
 																</DragWrapper>
 															)}
 														</For>
@@ -200,11 +197,9 @@ export const Sidebar: Component = () => {
 				<For each={project.characters.list()}>
 					{(character) => (
 						<DragWrapper kind="character" id={character.id}>
-							<button
-								class={styles.leafNode}
-								data-selected={
-									isSelected("character", character.id) ? "" : undefined
-								}
+							<TreeNode
+								indent={1}
+								selected={isSelected("character", character.id)}
 								onClick={() =>
 									editorStore.actions.select({
 										kind: "character",
@@ -213,7 +208,7 @@ export const Sidebar: Component = () => {
 								}
 							>
 								{character.name}
-							</button>
+							</TreeNode>
 						</DragWrapper>
 					)}
 				</For>
