@@ -16,6 +16,7 @@ type Props = {
 	selected?: boolean;
 	class?: string;
 	onClick?: (e: MouseEvent) => void;
+	onDblClick?: (e: MouseEvent) => void;
 	children?: JSX.Element;
 };
 
@@ -28,6 +29,7 @@ export const TreeNode: Component<Props> = (props) => {
 		"selected",
 		"class",
 		"onClick",
+		"onDblClick",
 		"children",
 	]);
 
@@ -42,6 +44,7 @@ export const TreeNode: Component<Props> = (props) => {
 				"--tree-indent": local.indent ?? 0,
 			}}
 			{...(local.onClick ? { onClick: local.onClick } : {})}
+			{...(local.onDblClick ? { onDblClick: local.onDblClick } : {})}
 			{...rest}
 		>
 			<span class={styles.indicator}>{local.indicator}</span>

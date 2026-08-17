@@ -15,6 +15,10 @@ export const Sidebar: Component = () => {
 		editorStore.state.selection?.kind === kind &&
 		editorStore.state.selection.id === id;
 
+	// Helper to resolve whether a node is currently expanded in the store
+	const isExpanded = (id: string, defaultOpen: boolean = false) =>
+		editorStore.state.expanded[id] ?? defaultOpen;
+
 	const handleAddCollection = async (e: MouseEvent) => {
 		e.stopPropagation();
 		const newCollection = await window.api.collections.create({
@@ -22,6 +26,7 @@ export const Sidebar: Component = () => {
 		});
 		project.collections.add(newCollection);
 		editorStore.actions.select({ kind: "collection", id: newCollection.id });
+		editorStore.actions.setExpanded(newCollection.id, true); // Optionally expand on creation
 	};
 
 	const handleAddChapter = async (e: MouseEvent, collectionId: string) => {
@@ -32,6 +37,7 @@ export const Sidebar: Component = () => {
 		});
 		project.chapters.add(newChapter);
 		editorStore.actions.select({ kind: "chapter", id: newChapter.id });
+		editorStore.actions.setExpanded(collectionId, true); // Ensure parent is expanded
 	};
 
 	const handleAddEvent = async (e: MouseEvent, chapterId: string) => {
@@ -42,6 +48,7 @@ export const Sidebar: Component = () => {
 		});
 		project.events.add(newEvent);
 		editorStore.actions.select({ kind: "event", id: newEvent.id });
+		editorStore.actions.setExpanded(chapterId, true); // Ensure parent is expanded
 	};
 
 	const handleAddCharacter = async (e: MouseEvent) => {
@@ -58,7 +65,13 @@ export const Sidebar: Component = () => {
 			<Collapsible
 				label="Collections"
 				variant="section"
-				defaultOpen
+				open={isExpanded("section-collections", true)}
+				onOpenChange={(isOpen) =>
+					editorStore.actions.setExpanded("section-collections", isOpen)
+				}
+				onDoubleClick={() =>
+					editorStore.actions.toggleExpanded("section-collections", true)
+				}
 				action={
 					<IconButton label="Add collection" onClick={handleAddCollection}>
 						<Plus size={16} />
@@ -73,11 +86,18 @@ export const Sidebar: Component = () => {
 								variant="node"
 								indent={1}
 								selected={isSelected("collection", collection.id)}
+								open={isExpanded(collection.id, false)}
+								onOpenChange={(isOpen) =>
+									editorStore.actions.setExpanded(collection.id, isOpen)
+								}
 								onClick={() =>
 									editorStore.actions.select({
 										kind: "collection",
 										id: collection.id,
 									})
+								}
+								onDoubleClick={() =>
+									editorStore.actions.toggleExpanded(collection.id, false)
 								}
 								action={
 									<IconButton
@@ -118,11 +138,21 @@ export const Sidebar: Component = () => {
 													variant="node"
 													indent={2}
 													selected={isSelected("chapter", chapter.id)}
+													open={isExpanded(chapter.id, false)}
+													onOpenChange={(isOpen) =>
+														editorStore.actions.setExpanded(chapter.id, isOpen)
+													}
 													onClick={() =>
 														editorStore.actions.select({
 															kind: "chapter",
 															id: chapter.id,
 														})
+													}
+													onDoubleClick={() =>
+														editorStore.actions.toggleExpanded(
+															chapter.id,
+															false,
+														)
 													}
 													action={
 														<IconButton
@@ -187,7 +217,13 @@ export const Sidebar: Component = () => {
 			<Collapsible
 				label="Characters"
 				variant="section"
-				defaultOpen
+				open={isExpanded("section-characters", true)}
+				onOpenChange={(isOpen) =>
+					editorStore.actions.setExpanded("section-characters", isOpen)
+				}
+				onDoubleClick={() =>
+					editorStore.actions.toggleExpanded("section-characters", true)
+				}
 				action={
 					<IconButton label="Add character" onClick={handleAddCharacter}>
 						<Plus size={16} />

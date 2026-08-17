@@ -10,12 +10,15 @@ type Props = {
 	label: JSX.Element;
 	variant?: "section" | "node";
 	defaultOpen?: boolean;
+	open?: boolean;
+	onOpenChange?: (isOpen: boolean) => void;
 	indent?: number;
 	action?: JSX.Element;
 	class?: string;
 	children?: JSX.Element;
 	selected?: boolean;
 	onClick?: (e: MouseEvent) => void;
+	onDoubleClick?: (e: MouseEvent) => void;
 };
 
 export const Collapsible: Component<Props> = (props) => {
@@ -23,17 +26,22 @@ export const Collapsible: Component<Props> = (props) => {
 		"label",
 		"variant",
 		"defaultOpen",
+		"open",
+		"onOpenChange",
 		"indent",
 		"action",
 		"class",
 		"children",
 		"selected",
 		"onClick",
+		"onDoubleClick",
 	]);
 
 	return (
 		<KCollapsible
 			defaultOpen={local.defaultOpen ?? false}
+			{...(local.open !== undefined ? { open: local.open } : {})}
+			{...(local.onOpenChange ? { onOpenChange: local.onOpenChange } : {})}
 			class={`${styles.root} ${local.class || ""}`.trim()}
 		>
 			<div
@@ -42,17 +50,21 @@ export const Collapsible: Component<Props> = (props) => {
 				}`.trim()}
 			>
 				<TreeNode
-					as={KCollapsible.Trigger}
 					variant={local.variant ?? "node"}
 					indent={local.indent ?? 0}
 					selected={local.selected ?? false}
 					class={styles.trigger}
 					indicator={
-						<span class={styles.chevron} aria-hidden="true">
+						<KCollapsible.Trigger
+							class={styles.chevron}
+							// Stop propagation so clicking the chevron doesn't also trigger select/onClick
+							onClick={(e: MouseEvent) => e.stopPropagation()}
+						>
 							<ChevronRight size={14} strokeWidth={2.5} />
-						</span>
+						</KCollapsible.Trigger>
 					}
 					{...(local.onClick ? { onClick: local.onClick } : {})}
+					{...(local.onDoubleClick ? { onDblClick: local.onDoubleClick } : {})}
 				>
 					{local.label}
 				</TreeNode>

@@ -28,10 +28,20 @@
 	align-items: center;
 	justify-content: center;
 	color: var(--muted);
+
+	/* Reset native button styles so the chevron trigger only contributes its own
+	 * visual styling */
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+}
+
+.chevron svg {
 	transition: transform var(--transition-fast);
 }
 
-.trigger[data-expanded] .chevron {
+.chevron[data-expanded] svg {
 	transform: rotate(90deg);
 }
 
