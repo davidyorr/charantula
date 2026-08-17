@@ -4,5 +4,23 @@
 	border-right: 1px solid var(--border);
 	background: var(--panel);
 	overflow-y: auto;
-	padding-bottom: var(--space-4);
+}
+
+.projectBar {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	margin-top: auto;
+	padding: var(--space-2) var(--space-2) var(--space-2) var(--space-4);
+	border-top: 1px solid var(--border);
+}
+
+.projectName {
+	flex: 1;
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	font-size: var(--text-sm);
+	font-weight: 700;
 }

@@ -5,14 +5,20 @@ import styles from "./IconButton.module.css";
 
 type Props = JSX.ButtonHTMLAttributes<HTMLButtonElement> & {
 	label: string;
+	size?: "sm" | "md";
 };
 
 export const IconButton: Component<Props> = (props) => {
-	const [local, rest] = splitProps(props, ["label", "class", "children"]);
+	const [local, rest] = splitProps(props, [
+		"label",
+		"class",
+		"children",
+		"size",
+	]);
 
 	return (
 		<KButton
-			class={`${styles.button} ${local.class || ""}`.trim()}
+			class={`${styles.button} ${styles[local.size ?? "md"]} ${local.class || ""}`.trim()}
 			aria-label={local.label}
 			{...rest}
 		>

@@ -1,4 +1,4 @@
-import { Plus } from "lucide-solid";
+import { Plus, Settings } from "lucide-solid";
 import { For, Show, type Component } from "solid-js";
 
 import { editorStore } from "@/renderer/features/editor/store";
@@ -73,7 +73,11 @@ export const Sidebar: Component = () => {
 					editorStore.actions.toggleExpanded("section-collections", true)
 				}
 				action={
-					<IconButton label="Add collection" onClick={handleAddCollection}>
+					<IconButton
+						label="Add collection"
+						size="sm"
+						onClick={handleAddCollection}
+					>
 						<Plus size={16} />
 					</IconButton>
 				}
@@ -102,6 +106,7 @@ export const Sidebar: Component = () => {
 								action={
 									<IconButton
 										label="Add chapter"
+										size="sm"
 										onClick={(e) => handleAddChapter(e, collection.id)}
 									>
 										<Plus size={16} />
@@ -157,6 +162,7 @@ export const Sidebar: Component = () => {
 													action={
 														<IconButton
 															label="Add event"
+															size="sm"
 															onClick={(e) => handleAddEvent(e, chapter.id)}
 														>
 															<Plus size={16} />
@@ -225,7 +231,11 @@ export const Sidebar: Component = () => {
 					editorStore.actions.toggleExpanded("section-characters", true)
 				}
 				action={
-					<IconButton label="Add character" onClick={handleAddCharacter}>
+					<IconButton
+						label="Add character"
+						size="sm"
+						onClick={handleAddCharacter}
+					>
 						<Plus size={16} />
 					</IconButton>
 				}
@@ -249,6 +259,22 @@ export const Sidebar: Component = () => {
 					)}
 				</For>
 			</Collapsible>
+
+			<div class={styles.projectBar}>
+				<span class={styles.projectName}>
+					{project.current()?.metadata.projectName}
+				</span>
+
+				<IconButton
+					label="Project settings"
+					size="md"
+					onClick={() => {
+						// Open project settings
+					}}
+				>
+					<Settings size={16} />
+				</IconButton>
+			</div>
 		</nav>
 	);
 };
