@@ -1,0 +1,102 @@
+.overlay {
+	position: fixed;
+	inset: 0;
+	background: rgb(0 0 0 / 40%);
+}
+
+.content {
+	position: fixed;
+	top: 50%;
+	left: 50%;
+	width: min(480px, calc(100vw - 32px));
+	transform: translate(-50%, -50%);
+	padding: var(--space-6);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	background: var(--panel);
+	box-shadow: var(--shadow-md);
+}
+
+.title {
+	margin: 0;
+	font-family: var(--font-display);
+	font-size: var(--text-lg);
+}
+
+.form {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-4);
+	margin-top: var(--space-4);
+}
+
+.field {
+	display: flex;
+	flex-direction: column;
+	gap: var(--space-1);
+}
+
+.label {
+	font-size: var(--text-sm);
+	color: var(--muted);
+}
+
+.input,
+.textarea {
+	font: inherit;
+	padding: var(--space-2) var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-sm);
+	background: var(--bg);
+	color: inherit;
+}
+
+.input:focus,
+.textarea:focus {
+	outline: 2px solid var(--accent);
+	outline-offset: 1px;
+}
+
+.textarea {
+	resize: vertical;
+	min-height: 5rem;
+}
+
+.error {
+	margin: 0;
+	color: var(--danger);
+	font-size: var(--text-sm);
+}
+
+.actions {
+	display: flex;
+	justify-content: flex-end;
+	gap: var(--space-2);
+	margin-top: var(--space-2);
+}
+
+.cancelButton,
+.saveButton {
+	padding: var(--space-2) var(--space-4);
+	border-radius: var(--radius-sm);
+	font: inherit;
+	cursor: pointer;
+}
+
+.cancelButton {
+	border: 1px solid var(--border);
+	background: transparent;
+	color: inherit;
+}
+
+.saveButton {
+	border: none;
+	background: var(--accent);
+	color: var(--accent-fg);
+}
+
+.saveButton:disabled,
+.cancelButton:disabled {
+	opacity: 0.6;
+	cursor: not-allowed;
+}

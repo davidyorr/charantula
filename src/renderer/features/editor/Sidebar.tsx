@@ -10,7 +10,11 @@ import { project } from "@/renderer/shared/projectStore";
 import { DragWrapper } from "./DragWrapper";
 import styles from "./Sidebar.module.css";
 
-export const Sidebar: Component = () => {
+type Props = {
+	onOpenSettings: () => void;
+};
+
+export const Sidebar: Component<Props> = (props) => {
 	const isSelected = (kind: string, id: string) =>
 		editorStore.state.selection?.kind === kind &&
 		editorStore.state.selection.id === id;
@@ -262,15 +266,13 @@ export const Sidebar: Component = () => {
 
 			<div class={styles.projectBar}>
 				<span class={styles.projectName}>
-					{project.current()?.metadata.projectName}
+					{project.metadata.get()?.projectName}
 				</span>
 
 				<IconButton
 					label="Project settings"
 					size="md"
-					onClick={() => {
-						// Open project settings
-					}}
+					onClick={props.onOpenSettings}
 				>
 					<Settings size={16} />
 				</IconButton>

@@ -5,10 +5,28 @@ import type {
 	Character,
 	Collection,
 	Event,
+	Metadata,
 	ProjectOpenResult,
 } from "@/shared/ipc";
 
 const [current, setCurrent] = createSignal<ProjectOpenResult | null>(null);
+
+const [metadataResource, { mutate: mutateMetadata }] = createResource(
+	current,
+	async (proj) => proj.metadata,
+);
+
+export const metadata = {
+	resource: metadataResource,
+	get: () => metadataResource(),
+	update: async (
+		patch: Partial<Pick<Metadata, "projectName" | "projectDescription">>,
+	) => {
+		const updated = await window.api.metadata.update(patch);
+		mutateMetadata(updated);
+		return updated;
+	},
+};
 
 const bySortOrder = (
 	a: { sortOrder?: number | null },
@@ -116,6 +134,9 @@ const characters = createEntityStore<Character>(async () =>
 export const project = {
 	current,
 	setCurrent,
+
+	metadata,
+
 	collections,
 	chapters,
 	events,
