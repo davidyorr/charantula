@@ -1,11 +1,13 @@
-import { Plus, Settings } from "lucide-solid";
-import { For, Show, type Component } from "solid-js";
+import { Plus, Settings, Trash2 } from "lucide-solid";
+import { createEffect, For, Show, type Component } from "solid-js";
 
 import { editorStore } from "@/renderer/features/editor/store";
 import { Collapsible } from "@/renderer/shared/Collapsible";
+import { ContextMenu } from "@/renderer/shared/ContextMenu";
 import { IconButton } from "@/renderer/shared/IconButton";
 import { TreeNode } from "@/renderer/shared/TreeNode";
 import { project } from "@/renderer/shared/projectStore";
+import type { Chapter, Character, Collection, Event } from "@/shared/ipc";
 
 import { DragWrapper } from "./DragWrapper";
 import styles from "./Sidebar.module.css";
@@ -64,6 +66,57 @@ export const Sidebar: Component<Props> = (props) => {
 		editorStore.actions.select({ kind: "character", id: newCharacter.id });
 	};
 
+	const handleDeleteCollection = async (collection: Collection) => {
+		await window.api.collections.delete(collection.id);
+
+		project.collections.remove(collection.id);
+
+		project.chapters.refetch();
+		project.events.refetch();
+	};
+
+	const handleDeleteChapter = async (chapter: Chapter) => {
+		await window.api.chapters.delete(chapter.id);
+
+		project.chapters.remove(chapter.id);
+
+		project.events.refetch();
+	};
+
+	const handleDeleteEvent = async (event: Event) => {
+		await window.api.events.delete(event.id);
+		project.events.remove(event.id);
+
+		if (isSelected("event", event.id)) {
+			editorStore.actions.select(null);
+		}
+	};
+
+	const handleDeleteCharacter = async (character: Character) => {
+		await window.api.characters.delete(character.id);
+		project.characters.remove(character.id);
+
+		if (isSelected("character", character.id)) {
+			editorStore.actions.select(null);
+		}
+	};
+
+	createEffect(() => {
+		const selected = editorStore.state.selection;
+		if (!selected) {
+			return;
+		}
+
+		const kind: keyof typeof project = `${selected.kind}s`;
+
+		// if whatever we have selected no longer exists in our project stores,
+		// clear the editor
+		const exists = project[kind].get(selected.id);
+		if (!exists) {
+			editorStore.actions.select(null);
+		}
+	});
+
 	return (
 		<nav class={styles.sidebar} aria-label="Project outline">
 			<Collapsible
@@ -88,138 +141,180 @@ export const Sidebar: Component<Props> = (props) => {
 			>
 				<For each={project.collections.list()}>
 					{(collection) => (
-						<DragWrapper kind="collection" id={collection.id} acceptsChildren>
-							<Collapsible
-								label={collection.title}
-								variant="node"
-								indent={1}
-								selected={isSelected("collection", collection.id)}
-								open={isExpanded(collection.id, false)}
-								onOpenChange={(isOpen) =>
-									editorStore.actions.setExpanded(collection.id, isOpen)
-								}
-								onClick={() =>
-									editorStore.actions.select({
-										kind: "collection",
-										id: collection.id,
-									})
-								}
-								onDoubleClick={() =>
-									editorStore.actions.toggleExpanded(collection.id, false)
-								}
-								action={
-									<IconButton
-										label="Add chapter"
-										size="sm"
-										onClick={(e) => handleAddChapter(e, collection.id)}
-									>
-										<Plus size={16} />
-									</IconButton>
-								}
-							>
-								<Show
-									when={
-										project.chapters
-											.list()
-											.filter((c) => c.collectionId === collection.id).length >
-										0
+						<ContextMenu
+							items={[
+								{
+									label: "Delete Collection",
+									icon: Trash2,
+									variant: "destructive",
+									onSelect: () => void handleDeleteCollection(collection),
+								},
+							]}
+						>
+							<DragWrapper kind="collection" id={collection.id} acceptsChildren>
+								<Collapsible
+									label={collection.title}
+									variant="node"
+									indent={1}
+									selected={isSelected("collection", collection.id)}
+									open={isExpanded(collection.id, false)}
+									onOpenChange={(isOpen) =>
+										editorStore.actions.setExpanded(collection.id, isOpen)
 									}
-									fallback={
-										<div style="padding: 6px 8px; margin-left: 24px; color: var(--muted); font-size: 12px;">
-											No chapters yet
-										</div>
+									onClick={() =>
+										editorStore.actions.select({
+											kind: "collection",
+											id: collection.id,
+										})
+									}
+									onDoubleClick={() =>
+										editorStore.actions.toggleExpanded(collection.id, false)
+									}
+									action={
+										<IconButton
+											label="Add chapter"
+											size="sm"
+											onClick={(e) => handleAddChapter(e, collection.id)}
+										>
+											<Plus size={16} />
+										</IconButton>
 									}
 								>
-									<For
-										each={project.chapters
-											.list()
-											.filter((c) => c.collectionId === collection.id)}
+									<Show
+										when={
+											project.chapters
+												.list()
+												.filter((c) => c.collectionId === collection.id)
+												.length > 0
+										}
+										fallback={
+											<div style="padding: 6px 8px; margin-left: 24px; color: var(--muted); font-size: 12px;">
+												No chapters yet
+											</div>
+										}
 									>
-										{(chapter) => (
-											<DragWrapper
-												kind="chapter"
-												id={chapter.id}
-												parentId={collection.id}
-												acceptsChildren
-											>
-												<Collapsible
-													label={chapter.title}
-													variant="node"
-													indent={2}
-													selected={isSelected("chapter", chapter.id)}
-													open={isExpanded(chapter.id, false)}
-													onOpenChange={(isOpen) =>
-														editorStore.actions.setExpanded(chapter.id, isOpen)
-													}
-													onClick={() =>
-														editorStore.actions.select({
-															kind: "chapter",
-															id: chapter.id,
-														})
-													}
-													onDoubleClick={() =>
-														editorStore.actions.toggleExpanded(
-															chapter.id,
-															false,
-														)
-													}
-													action={
-														<IconButton
-															label="Add event"
-															size="sm"
-															onClick={(e) => handleAddEvent(e, chapter.id)}
-														>
-															<Plus size={16} />
-														</IconButton>
-													}
+										<For
+											each={project.chapters
+												.list()
+												.filter((c) => c.collectionId === collection.id)}
+										>
+											{(chapter) => (
+												<ContextMenu
+													items={[
+														{
+															label: "Delete Chapter",
+															icon: Trash2,
+															variant: "destructive",
+															onSelect: () => void handleDeleteChapter(chapter),
+														},
+													]}
 												>
-													<Show
-														when={
-															project.events
-																.list()
-																.filter((ev) => ev.chapterId === chapter.id)
-																.length > 0
-														}
-														fallback={
-															<div style="padding: 6px 8px; margin-left: 48px; color: var(--muted); font-size: 12px;">
-																No events yet
-															</div>
-														}
+													<DragWrapper
+														kind="chapter"
+														id={chapter.id}
+														parentId={collection.id}
+														acceptsChildren
 													>
-														<For
-															each={project.events
-																.list()
-																.filter((ev) => ev.chapterId === chapter.id)}
-														>
-															{(event) => (
-																<DragWrapper
-																	kind="event"
-																	id={event.id}
-																	parentId={chapter.id}
+														<Collapsible
+															label={chapter.title}
+															variant="node"
+															indent={2}
+															selected={isSelected("chapter", chapter.id)}
+															open={isExpanded(chapter.id, false)}
+															onOpenChange={(isOpen) =>
+																editorStore.actions.setExpanded(
+																	chapter.id,
+																	isOpen,
+																)
+															}
+															onClick={() =>
+																editorStore.actions.select({
+																	kind: "chapter",
+																	id: chapter.id,
+																})
+															}
+															onDoubleClick={() =>
+																editorStore.actions.toggleExpanded(
+																	chapter.id,
+																	false,
+																)
+															}
+															action={
+																<IconButton
+																	label="Add event"
+																	size="sm"
+																	onClick={(e) => handleAddEvent(e, chapter.id)}
 																>
-																	<TreeNode
-																		indent={3}
-																		selected={isSelected("event", event.id)}
-																		onClick={() =>
-																			editorStore.actions.select({
-																				kind: "event",
-																				id: event.id,
-																			})
-																		}
-																	>
-																		{event.title}
-																	</TreeNode>
-																</DragWrapper>
-															)}
-														</For>
-													</Show>
-												</Collapsible>
-											</DragWrapper>
-										)}
-									</For>
-								</Show>
-							</Collapsible>
-						</DragWrapper>
+																	<Plus size={16} />
+																</IconButton>
+															}
+														>
+															<Show
+																when={
+																	project.events
+																		.list()
+																		.filter((ev) => ev.chapterId === chapter.id)
+																		.length > 0
+																}
+																fallback={
+																	<div style="padding: 6px 8px; margin-left: 48px; color: var(--muted); font-size: 12px;">
+																		No events yet
+																	</div>
+																}
+															>
+																<For
+																	each={project.events
+																		.list()
+																		.filter(
+																			(ev) => ev.chapterId === chapter.id,
+																		)}
+																>
+																	{(event) => (
+																		<ContextMenu
+																			items={[
+																				{
+																					label: "Delete Event",
+																					icon: Trash2,
+																					variant: "destructive",
+																					onSelect: () =>
+																						void handleDeleteEvent(event),
+																				},
+																			]}
+																		>
+																			<DragWrapper
+																				kind="event"
+																				id={event.id}
+																				parentId={chapter.id}
+																			>
+																				<TreeNode
+																					indent={3}
+																					selected={isSelected(
+																						"event",
+																						event.id,
+																					)}
+																					onClick={() =>
+																						editorStore.actions.select({
+																							kind: "event",
+																							id: event.id,
+																						})
+																					}
+																				>
+																					{event.title}
+																				</TreeNode>
+																			</DragWrapper>
+																		</ContextMenu>
+																	)}
+																</For>
+															</Show>
+														</Collapsible>
+													</DragWrapper>
+												</ContextMenu>
+											)}
+										</For>
+									</Show>
+								</Collapsible>
+							</DragWrapper>
+						</ContextMenu>
 					)}
 				</For>
 			</Collapsible>
@@ -246,20 +341,31 @@ export const Sidebar: Component<Props> = (props) => {
 			>
 				<For each={project.characters.list()}>
 					{(character) => (
-						<DragWrapper kind="character" id={character.id}>
-							<TreeNode
-								indent={1}
-								selected={isSelected("character", character.id)}
-								onClick={() =>
-									editorStore.actions.select({
-										kind: "character",
-										id: character.id,
-									})
-								}
-							>
-								{character.name}
-							</TreeNode>
-						</DragWrapper>
+						<ContextMenu
+							items={[
+								{
+									label: "Delete Character",
+									icon: Trash2,
+									variant: "destructive",
+									onSelect: () => void handleDeleteCharacter(character),
+								},
+							]}
+						>
+							<DragWrapper kind="character" id={character.id}>
+								<TreeNode
+									indent={1}
+									selected={isSelected("character", character.id)}
+									onClick={() =>
+										editorStore.actions.select({
+											kind: "character",
+											id: character.id,
+										})
+									}
+								>
+									{character.name}
+								</TreeNode>
+							</DragWrapper>
+						</ContextMenu>
 					)}
 				</For>
 			</Collapsible>

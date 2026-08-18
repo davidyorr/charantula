@@ -43,7 +43,7 @@ function createEntityStore<
 	},
 >(fetcher: () => Promise<Array<T>>) {
 	// Fetch array, but convert to a Dictionary: { [id]: T }
-	const [resource, { mutate }] = createResource(current, async () => {
+	const [resource, { mutate, refetch }] = createResource(current, async () => {
 		const items = await fetcher();
 		const dict: Record<string, T> = {};
 
@@ -70,6 +70,8 @@ function createEntityStore<
 		resource,
 
 		list,
+
+		refetch,
 
 		get: (id: string) => {
 			return resource()?.[id];
