@@ -1,12 +1,15 @@
 import { useNavigate } from "@solidjs/router";
-import { createSignal, onMount, type Component } from "solid-js";
+import { createSignal, Match, onMount, Switch, type Component } from "solid-js";
 
+import { CreateProject } from "@/renderer/features/welcome/CreateProject";
 import { Button } from "@/renderer/shared/Button";
 import { project } from "@/renderer/shared/projectStore";
 
 import styles from "./WelcomePage.module.css";
 
 export const WelcomePage: Component = () => {
+	const [creating, setCreating] = createSignal(false);
+
 	const [busy, setBusy] = createSignal(false);
 	const [error, setError] = createSignal<string | null>(null);
 
@@ -19,42 +22,22 @@ export const WelcomePage: Component = () => {
 		navigate(`/edit/${encodeURIComponent(result.metadata.projectName)}`);
 	}
 
-	async function handleCreateProjectClick() {
-		setBusy(true);
-
-		try {
-			const path = await window.api.project.pickNewPath();
-			if (!path) {
-				return;
-			}
-
-			const fileName = path.split(/[\\/]/).pop() ?? "Untitled.charantula";
-			const projectName = fileName.replace(/\.charantula$/i, "");
-
-			const result = await window.api.project.new({
-				path,
-				projectName,
-			});
-			await openProject(result);
-		} catch (error) {
-			setError(
-				error instanceof Error ? error.message : "Failed to create project",
-			);
-		} finally {
-			setBusy(false);
-		}
+	function handleCreateProjectClick() {
+		setCreating(true);
 	}
 
 	async function handleOpenProjectClick() {
 		setBusy(true);
+		setError(null);
 
 		try {
-			const path = await window.api.project.pickOpenPath();
-			if (!path) {
+			const projectDirectory = await window.api.project.pickOpenDirectory();
+
+			if (!projectDirectory) {
 				return;
 			}
 
-			const result = await window.api.project.open({ path });
+			const result = await window.api.project.open({ projectDirectory });
 			await openProject(result);
 		} catch (error) {
 			setError(
@@ -84,7 +67,9 @@ export const WelcomePage: Component = () => {
 			setBusy(true);
 
 			try {
-				const result = await window.api.project.open({ path: projectPath });
+				const result = await window.api.project.open({
+					projectDirectory: projectPath,
+				});
 				await openProject(result);
 			} catch (error) {
 				setError(
@@ -97,30 +82,41 @@ export const WelcomePage: Component = () => {
 	});
 
 	return (
-		<main class={styles.main}>
-			<header>
-				<h1>Charantula</h1>
-				<p>Organize stories without spoilers</p>
-			</header>
+		<Switch>
+			<Match when={!creating()}>
+				<main class={styles.main}>
+					<header>
+						<h1>Charantula</h1>
+						<p>Organize stories without spoilers</p>
+					</header>
 
-			<section class={styles.section}>
-				<Button
-					variant="primary"
-					onClick={handleCreateProjectClick}
-					disabled={busy()}
-				>
-					Create new project
-				</Button>
-				<Button
-					variant="primary"
-					onClick={handleOpenProjectClick}
-					disabled={busy()}
-				>
-					Open existing project
-				</Button>
-			</section>
+					<section class={styles.section}>
+						<Button
+							variant="primary"
+							onClick={handleCreateProjectClick}
+							disabled={busy()}
+						>
+							Create new project
+						</Button>
 
-			{error() ? <p>{error()}</p> : null}
-		</main>
+						<Button
+							variant="primary"
+							onClick={handleOpenProjectClick}
+							disabled={busy()}
+						>
+							Open existing project
+						</Button>
+					</section>
+
+					{error() ? <p>{error()}</p> : null}
+				</main>
+			</Match>
+			<Match when={creating()}>
+				<CreateProject
+					onCancel={() => setCreating(false)}
+					onCreated={openProject}
+				/>
+			</Match>
+		</Switch>
 	);
 };

@@ -3,13 +3,15 @@ import { contextBridge, ipcRenderer } from "electron";
 import type { IpcApi } from "@/shared/ipc";
 
 const api: IpcApi = {
+	// ---- Project ----
 	project: {
 		new: (args) => ipcRenderer.invoke("project:new", args),
 		open: (args) => ipcRenderer.invoke("project:open", args),
 		close: () => ipcRenderer.invoke("project:close"),
 		getRecent: () => ipcRenderer.invoke("project:getRecent"),
-		pickNewPath: () => ipcRenderer.invoke("project:pickNewPath"),
-		pickOpenPath: () => ipcRenderer.invoke("project:pickOpenPath"),
+		pickParentDirectory: () =>
+			ipcRenderer.invoke("project:pickParentDirectory"),
+		pickOpenDirectory: () => ipcRenderer.invoke("project:pickOpenDirectory"),
 	},
 	metadata: {
 		get: () => ipcRenderer.invoke("metadata:get"),
@@ -108,6 +110,11 @@ const api: IpcApi = {
 		remove: (eId, tId) => ipcRenderer.invoke("eventTags:remove", eId, tId),
 		reorder: (eId, order) =>
 			ipcRenderer.invoke("eventTags:reorder", eId, order),
+	},
+
+	// ---- Platform ----
+	platform: {
+		pathSeparator: process.platform === "win32" ? "\\" : "/",
 	},
 };
 

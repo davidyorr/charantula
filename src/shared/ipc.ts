@@ -182,12 +182,12 @@ export type ReaderCharacterView = {
 // -----------------------------------------------------------------------------
 
 export type ProjectOpenResult = {
-	path: string;
+	projectDirectory: string;
 	metadata: Metadata;
 };
 
 export type RecentProject = {
-	path: string;
+	projectDirectory: string;
 	projectName: string;
 	lastOpenedAt: number;
 };
@@ -197,17 +197,18 @@ export type RecentProject = {
 // -----------------------------------------------------------------------------
 
 export type IpcApi = {
+	// ---- Project ----
 	project: {
 		new: (args: {
-			path: string;
+			parentDirectory: string;
 			projectName: string;
 			projectDescription?: string;
 		}) => Promise<ProjectOpenResult>;
-		open: (args: { path: string }) => Promise<ProjectOpenResult>;
+		open: (args: { projectDirectory: string }) => Promise<ProjectOpenResult>;
 		close: () => Promise<void>;
 		getRecent: () => Promise<Array<RecentProject>>;
-		pickNewPath: () => Promise<string | null>;
-		pickOpenPath: () => Promise<string | null>;
+		pickParentDirectory: () => Promise<string | null>;
+		pickOpenDirectory: () => Promise<string | null>;
 	};
 
 	metadata: {
@@ -346,5 +347,10 @@ export type IpcApi = {
 			eventId: string,
 			order: Array<EventTagReorderEntry>,
 		) => Promise<void>;
+	};
+
+	// ---- Platform ----
+	platform: {
+		pathSeparator: string;
 	};
 };

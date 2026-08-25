@@ -35,12 +35,18 @@ export async function getRecentProjects(): Promise<Array<RecentProject>> {
 
 export async function addRecentProject(entry: RecentProject): Promise<void> {
 	const entries = await readAll();
-	const deduped = entries.filter((e) => e.path !== entry.path);
+	const deduped = entries.filter(
+		(e) => e.projectDirectory !== entry.projectDirectory,
+	);
 	deduped.unshift(entry);
 	await writeAll(deduped.slice(0, MAX_RECENT));
 }
 
-export async function removeRecentProject(filePath: string): Promise<void> {
+export async function removeRecentProject(
+	projectDirectory: string,
+): Promise<void> {
 	const entries = await readAll();
-	await writeAll(entries.filter((e) => e.path !== filePath));
+	await writeAll(
+		entries.filter((e) => e.projectDirectory !== projectDirectory),
+	);
 }

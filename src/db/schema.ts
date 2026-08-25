@@ -1,6 +1,6 @@
 // Charantula schema
 //
-// SQLite, one database file per Project (e.g. "Lord of the Rings.charantula").
+// SQLite, one database file per Project
 //
 // Hierarchy:
 // - Project (this file) > Collection > Chapter > Event

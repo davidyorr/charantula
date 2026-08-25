@@ -11,11 +11,11 @@ import path from "path";
 
 let electronApp: ElectronApplication;
 let window: Page;
-let tempFilesToCleanup: Array<string> = [];
+let tempPathsToCleanup: Array<string> = [];
 
 test.describe("Charantula E2E", () => {
 	test.beforeEach(async () => {
-		tempFilesToCleanup = [];
+		tempPathsToCleanup = [];
 
 		const mainProcessPath = path.join(
 			import.meta.dirname,
@@ -33,9 +33,9 @@ test.describe("Charantula E2E", () => {
 	test.afterEach(async () => {
 		await electronApp.close();
 
-		for (const filePath of tempFilesToCleanup) {
-			if (fs.existsSync(filePath)) {
-				fs.unlinkSync(filePath);
+		for (const p of tempPathsToCleanup) {
+			if (fs.existsSync(p)) {
+				fs.rmSync(p, { recursive: true, force: true });
 			}
 		}
 	});
@@ -55,19 +55,29 @@ test.describe("Charantula E2E", () => {
 
 	test("successfully creates and edits a project", async () => {
 		const projectName = `TestProject_${Date.now()}`;
-		const tempFilePath = path.join(os.tmpdir(), `${projectName}.charantula`);
-		tempFilesToCleanup.push(tempFilePath);
+		const parentDirPath = os.tmpdir();
+		const projectDirPath = path.join(parentDirPath, projectName);
 
-		// Tell the Main Process to bypass the native Save dialog and return a fake path
+		// Track the final project directory for cleanup
+		tempPathsToCleanup.push(projectDirPath);
+
+		// Tell the Main Process to bypass the native Open dialog and return a mock parent directory
 		await electronApp.evaluate(({ dialog }, pathArg) => {
-			dialog.showSaveDialog = () =>
+			dialog.showOpenDialog = () =>
 				Promise.resolve({
 					canceled: false,
-					filePath: pathArg,
+					filePaths: [pathArg],
 				});
-		}, tempFilePath);
+		}, parentDirPath);
 
 		await window.getByRole("button", { name: "Create new project" }).click();
+
+		// Fill out the Create Project form
+		await window
+			.getByPlaceholder("e.g. The Lord of the Rings")
+			.fill(projectName);
+		await window.getByRole("button", { name: "Browse..." }).click();
+		await window.getByRole("button", { name: "Create project" }).click();
 
 		// assert initial navigation and empty state
 		const urlRegex = new RegExp(`.*#/edit/${projectName}`);
@@ -176,19 +186,31 @@ test.describe("Charantula E2E", () => {
 		).toBeVisible();
 	});
 
-	test("does nothing if the user cancels the native dialog", async () => {
+	test("handles cancellation gracefully during project creation", async () => {
 		// Simulate the user clicking "Cancel" on the native OS dialog
 		await electronApp.evaluate(({ dialog }) => {
-			dialog.showSaveDialog = () =>
+			dialog.showOpenDialog = () =>
 				Promise.resolve({
 					canceled: true,
-					filePath: "",
+					filePaths: [],
 				});
 		});
 
 		await window.getByRole("button", { name: "Create new project" }).click();
 
-		// assert
+		// Fill in a name but mock cancelling the Browse dialog
+		await window
+			.getByPlaceholder("e.g. The Lord of the Rings")
+			.fill("My Cancel Test");
+		await window.getByRole("button", { name: "Browse..." }).click();
+
+		// Assert that the UI did not update the location display
+		await expect(window.getByText("No parent folder selected")).toBeVisible();
+
+		// Simulate clicking Cancel in the UI form
+		await window.getByRole("button", { name: "Cancel" }).click();
+
+		// assert we navigated back to the main welcome state
 		await expect(
 			window.getByRole("heading", { name: "Charantula" }),
 		).toBeVisible();
@@ -197,11 +219,7 @@ test.describe("Charantula E2E", () => {
 
 	test.skip("successfully opens an existing project", async () => {
 		const fixtureName = "sample_fixture";
-		const fixturePath = path.join(
-			import.meta.dirname,
-			"fixtures",
-			`${fixtureName}.charantula`,
-		);
+		const fixturePath = path.join(import.meta.dirname, "fixtures", fixtureName);
 
 		// Tell the Main Process to bypass the native Open dialog
 		await electronApp.evaluate(({ dialog }, pathArg) => {
