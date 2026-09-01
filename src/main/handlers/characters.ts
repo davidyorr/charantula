@@ -8,8 +8,13 @@ import {
 	collections,
 	tags,
 } from "@/db/schema";
-import { getDb, type DrizzleDb } from "@/main/db";
+import { getCurrentProjectDirectory, getDb, type DrizzleDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
+import {
+	deleteEntityImage,
+	renameEntityImage,
+	saveEntityImage,
+} from "@/main/imageStorage";
 import type { IpcApi } from "@/shared/ipc";
 
 async function getCharacterDetailInternal(db: DrizzleDb, id: string) {
@@ -183,6 +188,39 @@ export const charactersHandlers: IpcApi["characters"] = {
 
 	async update(id, patch) {
 		const db = getDb();
+
+		// If the patch does not include a name, the image filename does not change
+		if (patch.name !== undefined) {
+			const [existing] = await db
+				.select()
+				.from(characters)
+				.where(eq(characters.id, id));
+
+			if (!existing) {
+				throw new Error(`Character "${id}" not found.`);
+			}
+
+			// A name may be included in the patch without actually changing.
+			// In that case, leave the image and imagePath untouched.
+			if (patch.name !== existing.name) {
+				// The name changed, so rename the image to keep its filename in
+				// sync. renameEntityImage() returns null when there is no image
+				// or when the sanitized filename would remain unchanged.
+				const imagePath = await renameEntityImage(
+					getCurrentProjectDirectory(),
+					"characters",
+					id,
+					existing.imagePath,
+					patch.name,
+				);
+
+				// Persist the new path only when the image was actually renamed.
+				if (imagePath !== null) {
+					patch.imagePath = imagePath;
+				}
+			}
+		}
+
 		const [row] = await db
 			.update(characters)
 			.set(patch)
@@ -196,6 +234,21 @@ export const charactersHandlers: IpcApi["characters"] = {
 
 	async delete(id) {
 		const db = getDb();
+
+		const [existing] = await db
+			.select()
+			.from(characters)
+			.where(eq(characters.id, id));
+		if (!existing) {
+			throw new Error(`Character "${id}" not found.`);
+		}
+
+		// delete the image if there is one
+		if (existing.imagePath) {
+			await deleteEntityImage(getCurrentProjectDirectory(), existing.imagePath);
+		}
+
+		// delete the Character
 		await db.delete(characters).where(eq(characters.id, id));
 	},
 
@@ -222,5 +275,54 @@ export const charactersHandlers: IpcApi["characters"] = {
 		return char?.id ?? null;
 
 		// Fall back to alias?
+	},
+
+	async setImage(id, sourceFilePath) {
+		const db = getDb();
+		const [existing] = await db
+			.select()
+			.from(characters)
+			.where(eq(characters.id, id));
+		if (!existing) {
+			throw new Error(`Character "${id}" not found.`);
+		}
+
+		const imagePath = await saveEntityImage(
+			getCurrentProjectDirectory(),
+			"characters",
+			id,
+			existing.name,
+			existing.imagePath,
+			sourceFilePath,
+		);
+
+		const [row] = await db
+			.update(characters)
+			.set({ imagePath })
+			.where(eq(characters.id, id))
+			.returning();
+		return row;
+	},
+
+	async removeImage(id) {
+		const db = getDb();
+		const [existing] = await db
+			.select()
+			.from(characters)
+			.where(eq(characters.id, id));
+		if (!existing) {
+			throw new Error(`Character "${id}" not found.`);
+		}
+
+		if (existing.imagePath) {
+			await deleteEntityImage(getCurrentProjectDirectory(), existing.imagePath);
+		}
+
+		const [row] = await db
+			.update(characters)
+			.set({ imagePath: null })
+			.where(eq(characters.id, id))
+			.returning();
+		return row;
 	},
 };

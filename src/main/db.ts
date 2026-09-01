@@ -14,7 +14,8 @@ function createDrizzle(sqlite: Database.Database) {
 export type DrizzleDb = ReturnType<typeof createDrizzle>;
 
 type OpenProjectState = {
-	path: string;
+	directory: string;
+	charantulaFilePath: string;
 	sqlite: Database.Database;
 	db: DrizzleDb;
 };
@@ -39,18 +40,32 @@ function createProjectState(filePath: string): OpenProjectState {
 	const db = createDrizzle(sqlite);
 	migrate(db, { migrationsFolder: migrationsFolder() });
 
-	return { path: filePath, sqlite, db };
+	return {
+		directory: path.dirname(filePath),
+		charantulaFilePath: filePath,
+		sqlite,
+		db,
+	};
 }
 
 export function isProjectOpen(): boolean {
 	return current !== null;
 }
 
-export function getCurrentProjectPath(): string {
+export function getCurrentProjectDirectory(): string {
 	if (!current) {
 		throw new Error("No project is open.");
 	}
-	return current.path;
+
+	return current.directory;
+}
+
+export function getCurrentCharantulaFilePath(): string {
+	if (!current) {
+		throw new Error("No project is open.");
+	}
+
+	return current.charantulaFilePath;
 }
 
 export function getDb(): DrizzleDb {
@@ -59,6 +74,7 @@ export function getDb(): DrizzleDb {
 			"No project is open. Call project.open or project.new first.",
 		);
 	}
+
 	return current.db;
 }
 

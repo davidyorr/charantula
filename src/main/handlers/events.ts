@@ -8,8 +8,13 @@ import {
 	events,
 	tags,
 } from "@/db/schema";
-import { getDb, type DrizzleDb } from "@/main/db";
+import { getCurrentProjectDirectory, getDb, type DrizzleDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
+import {
+	deleteEntityImage,
+	renameEntityImage,
+	saveEntityImage,
+} from "@/main/imageStorage";
 import type { IpcApi } from "@/shared/ipc";
 
 async function getEventDetailInternal(db: DrizzleDb, id: string) {
@@ -95,7 +100,7 @@ export const eventsHandlers: IpcApi["events"] = {
 	async update(id, patch) {
 		const db = getDb();
 
-		const { chapterId, sortOrder, ...safePatch } = patch as {
+		const { chapterId, sortOrder, ...safePatch } = patch as typeof patch & {
 			chapterId?: never;
 			sortOrder?: never;
 		};
@@ -105,6 +110,38 @@ export const eventsHandlers: IpcApi["events"] = {
 		}
 		if (sortOrder !== undefined) {
 			throw new Error('Use "reorder()" to change event ordering.');
+		}
+
+		// If the patch does not include a title, the image filename does not change
+		if (safePatch.title !== undefined) {
+			const [existing] = await db
+				.select()
+				.from(events)
+				.where(eq(events.id, id));
+
+			if (!existing) {
+				throw new Error(`Event "${id}" not found.`);
+			}
+
+			// A title may be included in the patch without actually changing.
+			// In that case, leave the image and imagePath untouched.
+			if (safePatch.title !== existing.title) {
+				// The title changed, so rename the image to keep its filename
+				// in sync. renameEntityImage() returns null when there is no
+				// image or when the sanitized filename would remain unchanged.
+				const imagePath = await renameEntityImage(
+					getCurrentProjectDirectory(),
+					"events",
+					id,
+					existing.imagePath,
+					safePatch.title,
+				);
+
+				// Persist the new path only when the image was actually renamed
+				if (imagePath !== null) {
+					safePatch.imagePath = imagePath;
+				}
+			}
 		}
 
 		const [row] = await db
@@ -120,6 +157,18 @@ export const eventsHandlers: IpcApi["events"] = {
 
 	async delete(id) {
 		const db = getDb();
+
+		const [existing] = await db.select().from(events).where(eq(events.id, id));
+		if (!existing) {
+			throw new Error(`Event "${id}" not found.`);
+		}
+
+		// delete the image if there is one
+		if (existing.imagePath) {
+			await deleteEntityImage(getCurrentProjectDirectory(), existing.imagePath);
+		}
+
+		// delete the Event
 		await db.delete(events).where(eq(events.id, id));
 	},
 
@@ -166,6 +215,49 @@ export const eventsHandlers: IpcApi["events"] = {
 		if (!row) {
 			throw new Error(`Event "${id}" not found.`);
 		}
+		return row;
+	},
+
+	async setImage(id, sourceFilePath) {
+		const db = getDb();
+		const [existing] = await db.select().from(events).where(eq(events.id, id));
+		if (!existing) {
+			throw new Error(`Event "${id}" not found.`);
+		}
+
+		const imagePath = await saveEntityImage(
+			getCurrentProjectDirectory(),
+			"events",
+			id,
+			existing.title,
+			existing.imagePath,
+			sourceFilePath,
+		);
+
+		const [row] = await db
+			.update(events)
+			.set({ imagePath })
+			.where(eq(events.id, id))
+			.returning();
+		return row;
+	},
+
+	async removeImage(id) {
+		const db = getDb();
+		const [existing] = await db.select().from(events).where(eq(events.id, id));
+		if (!existing) {
+			throw new Error(`Event "${id}" not found.`);
+		}
+
+		if (existing.imagePath) {
+			await deleteEntityImage(getCurrentProjectDirectory(), existing.imagePath);
+		}
+
+		const [row] = await db
+			.update(events)
+			.set({ imagePath: null })
+			.where(eq(events.id, id))
+			.returning();
 		return row;
 	},
 };

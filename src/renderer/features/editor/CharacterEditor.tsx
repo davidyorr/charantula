@@ -1,5 +1,6 @@
 import { createMemo, Show, type Component } from "solid-js";
 
+import { ImageField } from "@/renderer/shared/ImageField";
 import { project } from "@/renderer/shared/projectStore";
 
 import styles from "./CharacterEditor.module.css";
@@ -37,6 +38,19 @@ export const CharacterEditor: Component<Props> = (props) => {
 		project.characters.update(updated);
 	};
 
+	const handleImagePick = async (sourceFilePath: string) => {
+		const updated = await window.api.characters.setImage(
+			props.id,
+			sourceFilePath,
+		);
+		project.characters.update(updated);
+	};
+
+	const handleImageRemove = async () => {
+		const updated = await window.api.characters.removeImage(props.id);
+		project.characters.update(updated);
+	};
+
 	return (
 		<Show when={character()}>
 			{(char) => (
@@ -49,6 +63,13 @@ export const CharacterEditor: Component<Props> = (props) => {
 							placeholder="Character Name"
 						/>
 					</header>
+
+					<ImageField
+						label="Portrait"
+						imagePath={char().imagePath}
+						onPick={handleImagePick}
+						onRemove={handleImageRemove}
+					/>
 
 					<div class={styles.field}>
 						<label class={styles.label}>Synopsis</label>

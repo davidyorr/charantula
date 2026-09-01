@@ -37,6 +37,9 @@ const api: IpcApi = {
 			ipcRenderer.invoke("chapters:reorder", colId, order),
 		move: (id, target, order?) =>
 			ipcRenderer.invoke("chapters:move", id, target, order),
+		setImage: (id, sourceFilePath) =>
+			ipcRenderer.invoke("chapters:setImage", id, sourceFilePath),
+		removeImage: (id) => ipcRenderer.invoke("chapters:removeImage", id),
 	},
 	characters: {
 		list: () => ipcRenderer.invoke("characters:list"),
@@ -50,6 +53,9 @@ const api: IpcApi = {
 		reorder: (order) => ipcRenderer.invoke("characters:reorder", order),
 		resolveIdByName: (name) =>
 			ipcRenderer.invoke("characters:resolveIdByName", name),
+		setImage: (id, sourceFilePath) =>
+			ipcRenderer.invoke("characters:setImage", id, sourceFilePath),
+		removeImage: (id) => ipcRenderer.invoke("characters:removeImage", id),
 	},
 	characterAliases: {
 		listByCharacter: (id) =>
@@ -92,6 +98,9 @@ const api: IpcApi = {
 		reorder: (cId, order) => ipcRenderer.invoke("events:reorder", cId, order),
 		move: (id, target, order?) =>
 			ipcRenderer.invoke("events:move", id, target, order),
+		setImage: (id, sourceFilePath) =>
+			ipcRenderer.invoke("events:setImage", id, sourceFilePath),
+		removeImage: (id) => ipcRenderer.invoke("events:removeImage", id),
 	},
 	eventCharacters: {
 		listByEvent: (id) => ipcRenderer.invoke("eventCharacters:listByEvent", id),
@@ -110,6 +119,13 @@ const api: IpcApi = {
 		remove: (eId, tId) => ipcRenderer.invoke("eventTags:remove", eId, tId),
 		reorder: (eId, order) =>
 			ipcRenderer.invoke("eventTags:reorder", eId, order),
+	},
+
+	// ---- Images ----
+	images: {
+		pickFile: () => ipcRenderer.invoke("images:pickFile"),
+		getDataUrl: (imagePath) =>
+			ipcRenderer.invoke("images:getDataUrl", imagePath),
 	},
 
 	// ---- Platform ----

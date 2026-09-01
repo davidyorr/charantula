@@ -1,8 +1,9 @@
 import { eq } from "drizzle-orm";
 
-import { collections } from "@/db/schema";
-import { getDb } from "@/main/db";
+import { chapters, collections, events } from "@/db/schema";
+import { getCurrentProjectDirectory, getDb } from "@/main/db";
 import { nextSortOrder } from "@/main/handlers/sortOrder";
+import { deleteEntityImage } from "@/main/imageStorage";
 import type { IpcApi } from "@/shared/ipc";
 
 export const collectionsHandlers: IpcApi["collections"] = {
@@ -47,6 +48,37 @@ export const collectionsHandlers: IpcApi["collections"] = {
 
 	async delete(id) {
 		const db = getDb();
+
+		// delete any child Chapter and Event images
+		const childChapters = await db
+			.select()
+			.from(chapters)
+			.where(eq(chapters.collectionId, id));
+
+		for (const childChapter of childChapters) {
+			const childEvents = await db
+				.select()
+				.from(events)
+				.where(eq(events.chapterId, childChapter.id));
+
+			for (const childEvent of childEvents) {
+				if (childEvent.imagePath) {
+					await deleteEntityImage(
+						getCurrentProjectDirectory(),
+						childEvent.imagePath,
+					);
+				}
+			}
+
+			if (childChapter.imagePath) {
+				await deleteEntityImage(
+					getCurrentProjectDirectory(),
+					childChapter.imagePath,
+				);
+			}
+		}
+
+		// delete the Collection
 		await db.delete(collections).where(eq(collections.id, id));
 	},
 

@@ -1,5 +1,6 @@
 import { createMemo, Show, type Component } from "solid-js";
 
+import { ImageField } from "@/renderer/shared/ImageField";
 import { project } from "@/renderer/shared/projectStore";
 import type { Event } from "@/shared/ipc";
 
@@ -67,6 +68,10 @@ async function parseToRichText(rawText: string): Promise<string> {
 
 export const EventEditor: Component<Props> = (props) => {
 	const event = createMemo(() => project.events.get(props.id));
+	const chapter = createMemo(() => {
+		const ev = event();
+		return ev ? project.chapters.get(ev.chapterId) : undefined;
+	});
 
 	const updateEventFields = async (updates: Partial<Event>) => {
 		const current = event();
@@ -95,6 +100,16 @@ export const EventEditor: Component<Props> = (props) => {
 		});
 	};
 
+	const handleImagePick = async (sourceFilePath: string) => {
+		const updated = await window.api.events.setImage(props.id, sourceFilePath);
+		project.events.update(updated);
+	};
+
+	const handleImageRemove = async () => {
+		const updated = await window.api.events.removeImage(props.id);
+		project.events.update(updated);
+	};
+
 	return (
 		<Show when={event()}>
 			{(ev) => (
@@ -111,6 +126,14 @@ export const EventEditor: Component<Props> = (props) => {
 							placeholder="Event Title"
 						/>
 					</header>
+
+					<ImageField
+						label="Hero Image"
+						imagePath={ev().imagePath}
+						fallbackImagePath={chapter()?.imagePath ?? null}
+						onPick={handleImagePick}
+						onRemove={handleImageRemove}
+					/>
 
 					<div class={styles.field}>
 						<label class={styles.label}>Content</label>

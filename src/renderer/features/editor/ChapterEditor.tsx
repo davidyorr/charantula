@@ -1,5 +1,6 @@
 import { createMemo, Show, type Component } from "solid-js";
 
+import { ImageField } from "@/renderer/shared/ImageField";
 import { project } from "@/renderer/shared/projectStore";
 import type { Chapter } from "@/shared/ipc";
 
@@ -23,6 +24,19 @@ export const ChapterEditor: Component<Props> = (props) => {
 		project.chapters.update(updated);
 	};
 
+	const handleImagePick = async (sourceFilePath: string) => {
+		const updated = await window.api.chapters.setImage(
+			props.id,
+			sourceFilePath,
+		);
+		project.chapters.update(updated);
+	};
+
+	const handleImageRemove = async () => {
+		const updated = await window.api.chapters.removeImage(props.id);
+		project.chapters.update(updated);
+	};
+
 	return (
 		<Show when={chapter()}>
 			{(chap) => (
@@ -37,6 +51,13 @@ export const ChapterEditor: Component<Props> = (props) => {
 							placeholder="Chapter Title (e.g. Chapter 1)"
 						/>
 					</header>
+
+					<ImageField
+						label="Cover Image"
+						imagePath={chap().imagePath}
+						onPick={handleImagePick}
+						onRemove={handleImageRemove}
+					/>
 
 					<div class={styles.field}>
 						<label class={styles.label}>Subtitle</label>

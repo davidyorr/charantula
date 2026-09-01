@@ -10,6 +10,7 @@ import { collectionsHandlers } from "./handlers/collections";
 import { eventCharactersHandlers } from "./handlers/eventCharacters";
 import { eventTagsHandlers } from "./handlers/eventTags";
 import { eventsHandlers } from "./handlers/events";
+import { imagesHandlers } from "./handlers/images";
 import { metadataHandlers } from "./handlers/metadata";
 import { projectHandlers } from "./handlers/project";
 import { tagsHandlers } from "./handlers/tags";
@@ -30,6 +31,7 @@ app.whenReady().then(() => {
 		events: eventsHandlers,
 		eventCharacters: eventCharactersHandlers,
 		eventTags: eventTagsHandlers,
+		images: imagesHandlers,
 	});
 
 	const win = new BrowserWindow({

@@ -249,6 +249,8 @@ export type IpcApi = {
 			targetCollectionId: string,
 			sortOrder?: number,
 		) => Promise<Chapter>;
+		setImage: (id: string, sourceFilePath: string) => Promise<Chapter>;
+		removeImage: (id: string) => Promise<Chapter>;
 	};
 
 	characters: {
@@ -264,6 +266,8 @@ export type IpcApi = {
 		delete: (id: string) => Promise<void>;
 		reorder: (order: Array<ReorderEntry>) => Promise<void>;
 		resolveIdByName: (name: string) => Promise<string | null>;
+		setImage: (id: string, sourceFilePath: string) => Promise<Character>;
+		removeImage: (id: string) => Promise<Character>;
 	};
 
 	characterAliases: {
@@ -325,6 +329,8 @@ export type IpcApi = {
 			targetChapterId: string,
 			sortOrder?: number,
 		) => Promise<Event>;
+		setImage: (id: string, sourceFilePath: string) => Promise<Event>;
+		removeImage: (id: string) => Promise<Event>;
 	};
 
 	eventCharacters: {
@@ -347,6 +353,34 @@ export type IpcApi = {
 			eventId: string,
 			order: Array<EventTagReorderEntry>,
 		) => Promise<void>;
+	};
+
+	// ---- Images ----
+	// -------------------------------------------------------------------------
+	// imagePath (on Chapter/Character/Event) is always relative to the project
+	// directory, e.g. "images/characters/Gandalf.jpg" to make projects
+	// portable. The filename is derived from the entity's title/name at the
+	// time setImage is called, run through sanitizeFilename
+	// (src/shared/sanitizeFilename.ts) so the project's /images folders stay
+	// browsable in the OS file explorer. Because the filename tracks the
+	// entity's name rather than its id, replacing the file directly on disk
+	// (same name, new bytes) works without touching the app. Renaming the
+	// entity keeps the file in sync automatically (the update() handlers call
+	// renameEntityImage internally) -- only adding the very first image
+	// requires an explicit setImage call. Would be nice to add the capability
+	// of adding initial images through the OS file explorer in the future.
+	// -------------------------------------------------------------------------
+	images: {
+		/**
+		 * Opens a native "select image" dialog. Null if the user canceled.
+		 * */
+		pickFile: () => Promise<string | null>;
+		/**
+		 * Reads the image at `imagePath` (relative to the project directory)
+		 * and returns it as a data URL for direct use in an <img src>. Null if
+		 * the file no longer exists on disk.
+		 */
+		getDataUrl: (imagePath: string) => Promise<string | null>;
 	};
 
 	// ---- Platform ----
