@@ -65,7 +65,14 @@ export const ImageField: Component<Props> = (props) => {
 						</div>
 					}
 				>
-					{(src) => <img class={styles.image} src={src()} alt="" />}
+					{(src) => (
+						<img
+							class={styles.image}
+							src={src()}
+							alt=""
+							data-testid="image-preview"
+						/>
+					)}
 				</Show>
 			</div>
 
