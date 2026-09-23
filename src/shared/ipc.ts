@@ -261,6 +261,14 @@ export type IpcApi = {
 			id: string,
 			progressChapterId: string | null,
 		) => Promise<ReaderCharacterView>;
+		/**
+		 * Characters who appear in at least one Event at or before
+		 * `progressChapterId` in the project's viewing order. A null
+		 * `progressChapterId` means no gating, so get every Character.
+		 */
+		listForReader: (
+			progressChapterId: string | null,
+		) => Promise<Array<Character>>;
 		create: (input: CreateCharacterInput) => Promise<Character>;
 		update: (id: string, patch: UpdateCharacterInput) => Promise<Character>;
 		delete: (id: string) => Promise<void>;

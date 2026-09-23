@@ -1,0 +1,32 @@
+.container {
+	display: grid;
+	justify-content: center;
+}
+
+.section {
+	display: flex;
+	flex-direction: column;
+	gap: 0.5rem;
+	margin-bottom: 1.5rem;
+
+	h2 {
+		align-self: center;
+	}
+}
+
+.option {
+	&[data-selected="true"] {
+		font-weight: 600;
+	}
+
+	&:hover {
+		opacity: 0.8;
+	}
+}
+
+.continue {
+	&:disabled {
+		cursor: not-allowed;
+		opacity: 0.5;
+	}
+}

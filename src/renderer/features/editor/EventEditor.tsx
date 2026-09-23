@@ -15,11 +15,11 @@ type ContentNode =
 	| { type: "character_ref"; characterId: string; text: string };
 
 /**
- * Parses raw text containing [Character] into a structured JSON string.
+ * Parses raw text containing [Character] into structured content nodes.
  */
-async function parseToRichText(rawText: string): Promise<string> {
+async function parseToNodes(rawText: string): Promise<Array<ContentNode>> {
 	if (!rawText) {
-		return JSON.stringify([]);
+		return [];
 	}
 
 	const nodes: Array<ContentNode> = [];
@@ -63,7 +63,42 @@ async function parseToRichText(rawText: string): Promise<string> {
 		});
 	}
 
-	return JSON.stringify(nodes);
+	return nodes;
+}
+
+/**
+ * Keeps the event_characters join table in sync with the character_ref
+ * nodes actually present in the Event's content.
+ */
+async function syncEventCharacters(
+	eventId: string,
+	nodes: Array<ContentNode>,
+): Promise<void> {
+	const referencedCharacterIds = new Set(
+		nodes
+			.filter((node) => node.type === "character_ref")
+			.map((node) => node.characterId)
+			.filter((characterId) => characterId !== "unresolved"),
+	);
+
+	const existing = await window.api.eventCharacters.listByEvent(eventId);
+	const existingCharacterIds = new Set(existing.map((row) => row.characterId));
+
+	const toAdd = [...referencedCharacterIds].filter(
+		(characterId) => !existingCharacterIds.has(characterId),
+	);
+	const toRemove = existing.filter(
+		(row) => !referencedCharacterIds.has(row.characterId),
+	);
+
+	await Promise.all([
+		...toAdd.map((characterId) =>
+			window.api.eventCharacters.add({ eventId, characterId }),
+		),
+		...toRemove.map((row) =>
+			window.api.eventCharacters.remove(eventId, row.characterId),
+		),
+	]);
 }
 
 export const EventEditor: Component<Props> = (props) => {
@@ -92,12 +127,15 @@ export const EventEditor: Component<Props> = (props) => {
 	};
 
 	const handleContentChange = async (rawText: string) => {
-		const contentJsonString = await parseToRichText(rawText);
+		const nodes = await parseToNodes(rawText);
 
-		updateEventFields({
-			contentPlain: rawText,
-			contentJson: contentJsonString,
-		});
+		await Promise.all([
+			updateEventFields({
+				contentPlain: rawText,
+				contentJson: JSON.stringify(nodes),
+			}),
+			syncEventCharacters(props.id, nodes),
+		]);
 	};
 
 	const handleImagePick = async (sourceFilePath: string) => {

@@ -47,6 +47,7 @@ const api: IpcApi = {
 		getDetail: (id) => ipcRenderer.invoke("characters:getDetail", id),
 		getForReader: (id, prog) =>
 			ipcRenderer.invoke("characters:getForReader", id, prog),
+		listForReader: (id) => ipcRenderer.invoke("characters:listForReader", id),
 		create: (input) => ipcRenderer.invoke("characters:create", input),
 		update: (id, patch) => ipcRenderer.invoke("characters:update", id, patch),
 		delete: (id) => ipcRenderer.invoke("characters:delete", id),

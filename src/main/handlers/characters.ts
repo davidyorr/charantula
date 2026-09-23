@@ -6,6 +6,8 @@ import {
 	characterTags,
 	characters,
 	collections,
+	eventCharacters,
+	events,
 	tags,
 } from "@/db/schema";
 import { getCurrentProjectDirectory, getDb, type DrizzleDb } from "@/main/db";
@@ -172,6 +174,48 @@ export const charactersHandlers: IpcApi["characters"] = {
 			visibleAliases,
 			visibleTags,
 		};
+	},
+
+	async listForReader(progressChapterId) {
+		const db = getDb();
+
+		if (progressChapterId === null) {
+			// Reader has finished the whole project -- nothing is gated.
+			return db.select().from(characters).orderBy(characters.sortOrder);
+		}
+
+		const positions = await resolveChapterPositions(db, [progressChapterId]);
+		const progressPosition = positions.get(progressChapterId);
+		if (!progressPosition) {
+			throw new Error(`progressChapterId "${progressChapterId}" not found.`);
+		}
+
+		// One row per distinct (character, chapter position) appearance.
+		const appearances = await db
+			.selectDistinct({
+				characterId: eventCharacters.characterId,
+				chapterSortOrder: chapters.sortOrder,
+				collectionSortOrder: collections.sortOrder,
+			})
+			.from(eventCharacters)
+			.innerJoin(events, eq(eventCharacters.eventId, events.id))
+			.innerJoin(chapters, eq(events.chapterId, chapters.id))
+			.innerJoin(collections, eq(chapters.collectionId, collections.id));
+
+		const visibleCharacterIds = new Set(
+			appearances
+				.filter((appearance) => isAtOrBefore(appearance, progressPosition))
+				.map((appearance) => appearance.characterId),
+		);
+
+		const allCharacters = await db
+			.select()
+			.from(characters)
+			.orderBy(characters.sortOrder);
+
+		return allCharacters.filter((character) =>
+			visibleCharacterIds.has(character.id),
+		);
 	},
 
 	async create(input) {
