@@ -3,4 +3,6 @@
 }
 
 .main {
+	padding: var(--space-4);
+	overflow-y: auto;
 }
