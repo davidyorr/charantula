@@ -10,9 +10,11 @@
 		"build": "vite build",
 		"start": "electron .",
 		"test": "npm run build && npx playwright test",
+		"typecheck": "tsc --build --noEmit",
 		"lint": "eslint .",
 		"format:check": "node --experimental-strip-types ./node_modules/prettier/bin/prettier.cjs . --check",
-		"format:fix": "node --experimental-strip-types ./node_modules/prettier/bin/prettier.cjs . --write"
+		"format:fix": "node --experimental-strip-types ./node_modules/prettier/bin/prettier.cjs . --write",
+		"db:generate": "drizzle-kit generate"
 	},
 	"repository": {
 		"type": "git",
