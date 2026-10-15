@@ -101,7 +101,7 @@ Follow surrounding code conventions, including section-divider comments. Add exp
 
 CSS Modules use `.module.css`; nest pseudo-classes and attribute selectors. Global styles belong in `.global.css` files.
 
-**Event handlers:** Name handlers `handle` + action + triggering event in PascalCase (e.g. `handleContinueClick`, `handleInputChange`, `handleFormSubmit`). Include the triggering event to distinguish handlers for the same action.
+**Event handlers:** Name handlers `handle` + action + triggering event in PascalCase (e.g. `handleContinueClick`, `handleInputChange`, `handleFormSubmit`). Include the triggering event to distinguish handlers for the same action. Never call one event handler from another — extract shared logic into a separate function that each handler calls directly.
 
 ## Testing
 
