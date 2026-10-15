@@ -68,3 +68,20 @@
 	display: inline-block;
 	padding: var(--space-2) var(--space-3);
 }
+
+.characterRef {
+	background: none;
+	border: none;
+	color: var(--accent);
+	font-family: inherit;
+	font-size: inherit;
+	font-weight: 600;
+	cursor: pointer;
+	padding: 0;
+	text-decoration: underline;
+	text-underline-offset: 2px;
+
+	&:hover {
+		color: var(--accent-hover);
+	}
+}

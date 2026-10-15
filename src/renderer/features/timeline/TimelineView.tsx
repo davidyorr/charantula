@@ -1,3 +1,4 @@
+import { useNavigate, useParams } from "@solidjs/router";
 import { ChevronLeft, ChevronRight } from "lucide-solid";
 import {
 	createMemo,
@@ -12,6 +13,10 @@ import { IconButton } from "@/renderer/shared/IconButton";
 import { project } from "@/renderer/shared/projectStore";
 
 import styles from "./TimelineView.module.css";
+
+type RichNode =
+	| { type: "text"; text: string }
+	| { type: "character_ref"; characterId: string; text: string };
 
 type ImageResult = {
 	path: string;
@@ -138,6 +143,18 @@ export const TimelineView: Component<Props> = (props) => {
 		return null;
 	});
 
+	const parsedNodes = createMemo<Array<RichNode>>(() => {
+		const ev = currentEvent();
+		if (!ev?.contentJson) {
+			return [];
+		}
+		try {
+			return JSON.parse(ev.contentJson);
+		} catch {
+			return [];
+		}
+	});
+
 	const navigateTo = (index: number) => {
 		const events = timelineEvents();
 		if (index >= 0 && index < events.length) {
@@ -168,6 +185,37 @@ export const TimelineView: Component<Props> = (props) => {
 		};
 	});
 
+	const navigate = useNavigate();
+	const params = useParams();
+
+	const handleCharacterRefClick = (characterId: string) => {
+		const projectName = params.projectName as string;
+		const backPath = `/timeline/${encodeURIComponent(projectName)}?chapter=${props.chapterId}&character=${props.characterId}`;
+		navigate(
+			`/timeline/${encodeURIComponent(projectName)}/character/${characterId}?back=${encodeURIComponent(backPath)}`,
+		);
+	};
+
+	const renderRichText = (nodes: Array<RichNode>) => {
+		return nodes.map((node) => {
+			if (node.type === "text") {
+				return node.text;
+			}
+			if (node.type === "character_ref") {
+				return (
+					<button
+						type="button"
+						class={styles.characterRef}
+						onClick={() => handleCharacterRefClick(node.characterId)}
+					>
+						{node.text}
+					</button>
+				);
+			}
+			return null;
+		});
+	};
+
 	return (
 		<div
 			class={styles.container}
@@ -190,7 +238,18 @@ export const TimelineView: Component<Props> = (props) => {
 						{(ev) => (
 							<div class={styles.eventPanel}>
 								<h2 class={styles.eventTitle}>{ev().title}</h2>
-								<div class={styles.eventText}>{ev().contentPlain ?? ""}</div>
+								<Show
+									when={ev().contentJson}
+									fallback={
+										<div class={styles.eventText}>
+											{ev().contentPlain ?? ""}
+										</div>
+									}
+								>
+									<div class={styles.eventText}>
+										{renderRichText(parsedNodes())}
+									</div>
+								</Show>
 							</div>
 						)}
 					</Show>

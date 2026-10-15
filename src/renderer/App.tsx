@@ -1,6 +1,7 @@
 import { HashRouter, Route } from "@solidjs/router";
 import type { Component } from "solid-js";
 
+import { CharacterViewerPage } from "@/renderer/features/character-viewer/CharacterViewerPage";
 import { EditPage } from "@/renderer/features/editor/EditPage";
 import { TimelinePage } from "@/renderer/features/timeline/TimelinePage";
 import { WelcomePage } from "@/renderer/features/welcome/WelcomePage";
@@ -13,6 +14,10 @@ export const App: Component = () => {
 				<Route path="/" component={WelcomePage} />
 				<Route path="/edit/:projectName" component={EditPage} />
 				<Route path="/timeline/:projectName" component={TimelinePage} />
+				<Route
+					path="/timeline/:projectName/character/:characterId"
+					component={CharacterViewerPage}
+				/>
 			</HashRouter>
 		</ThemeProvider>
 	);
