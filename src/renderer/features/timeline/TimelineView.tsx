@@ -114,6 +114,16 @@ export const TimelineView: Component<Props> = (props) => {
 		return events[currentIndex()];
 	});
 
+	const eventChapter = createMemo(() => {
+		const ev = currentEvent();
+		return ev ? project.chapters.get(ev.chapterId) : undefined;
+	});
+
+	const eventCollection = createMemo(() => {
+		const ch = eventChapter();
+		return ch ? project.collections.get(ch.collectionId) : undefined;
+	});
+
 	// Determine the effective image path: event image, or chapter image as fallback.
 	const effectiveImagePath = createMemo(() => {
 		const ev = currentEvent();
@@ -237,6 +247,13 @@ export const TimelineView: Component<Props> = (props) => {
 					<Show when={currentEvent()}>
 						{(ev) => (
 							<div class={styles.eventPanel}>
+								<Show when={() => eventCollection() || eventChapter()}>
+									<div class={styles.eventMeta}>
+										<span>
+											{eventCollection()?.title} / {eventChapter()?.title}
+										</span>
+									</div>
+								</Show>
 								<h2 class={styles.eventTitle}>{ev().title}</h2>
 								<Show
 									when={ev().contentJson}
