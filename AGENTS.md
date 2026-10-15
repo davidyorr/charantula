@@ -97,7 +97,7 @@ Enforced by tooling:
 - Remove unused locals/parameters; prefix intentionally unused parameters with `_`.
 - Follow `prettier.config.ts` for tabs, import ordering, and formatting. Run `npm run format:fix`.
 
-Follow surrounding code conventions, including section-divider comments and explanatory comments for non-obvious decisions.
+Follow surrounding code conventions, including section-divider comments. Add explanatory comments only when they clarify non-obvious decisions, constraints, or intent that cannot be readily understood from the code itself. Don't add comments that merely restate what the code does.
 
 CSS Modules use `.module.css`; nest pseudo-classes and attribute selectors. Global styles belong in `.global.css` files.
 
