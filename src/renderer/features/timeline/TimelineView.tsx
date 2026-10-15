@@ -12,6 +12,11 @@ import { project } from "@/renderer/shared/projectStore";
 
 import styles from "./TimelineView.module.css";
 
+type ImageResult = {
+	path: string;
+	url: string | null;
+};
+
 type Props = {
 	chapterId: string;
 	characterId: string;
@@ -103,6 +108,35 @@ export const TimelineView: Component<Props> = (props) => {
 		return events[currentIndex()];
 	});
 
+	// Determine the effective image path: event image, or chapter image as fallback.
+	const effectiveImagePath = createMemo(() => {
+		const ev = currentEvent();
+		if (!ev) {
+			return null;
+		}
+		return (
+			ev.imagePath ?? project.chapters.get(ev.chapterId)?.imagePath ?? null
+		);
+	});
+
+	const [imageResult] = createResource<ImageResult, string>(
+		effectiveImagePath,
+		async (imagePath) => ({
+			path: imagePath,
+			url: await window.api.images.getDataUrl(imagePath),
+		}),
+	);
+
+	const currentImageUrl = createMemo(() => {
+		const result = imageResult();
+
+		if (result?.path === effectiveImagePath()) {
+			return result.url;
+		}
+
+		return null;
+	});
+
 	const handlePrevClick = () => {
 		if (currentIndex() > 0) {
 			setCurrentIndex(currentIndex() - 1);
@@ -116,7 +150,14 @@ export const TimelineView: Component<Props> = (props) => {
 	};
 
 	return (
-		<div class={styles.container}>
+		<div
+			class={styles.container}
+			style={{
+				"background-image": currentImageUrl()
+					? `url(${currentImageUrl()})`
+					: "none",
+			}}
+		>
 			<Show
 				when={timelineEvents().length > 0}
 				fallback={
@@ -125,6 +166,17 @@ export const TimelineView: Component<Props> = (props) => {
 					</div>
 				}
 			>
+				<div class={styles.eventContent}>
+					<Show when={currentEvent()}>
+						{(ev) => (
+							<div class={styles.eventPanel}>
+								<h2 class={styles.eventTitle}>{ev().title}</h2>
+								<div class={styles.eventText}>{ev().contentPlain ?? ""}</div>
+							</div>
+						)}
+					</Show>
+				</div>
+
 				<div class={styles.nav}>
 					<IconButton
 						label="Previous event"
@@ -145,17 +197,6 @@ export const TimelineView: Component<Props> = (props) => {
 					>
 						<ChevronRight size={24} />
 					</IconButton>
-				</div>
-
-				<div class={styles.eventContent}>
-					<Show when={currentEvent()}>
-						{(ev) => (
-							<div>
-								<h2 class={styles.eventTitle}>{ev().title}</h2>
-								<div class={styles.eventText}>{ev().contentPlain ?? ""}</div>
-							</div>
-						)}
-					</Show>
 				</div>
 			</Show>
 		</div>
