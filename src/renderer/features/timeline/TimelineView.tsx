@@ -3,6 +3,7 @@ import {
 	createMemo,
 	createResource,
 	createSignal,
+	onMount,
 	Show,
 	type Component,
 } from "solid-js";
@@ -137,17 +138,35 @@ export const TimelineView: Component<Props> = (props) => {
 		return null;
 	});
 
-	const handlePrevClick = () => {
-		if (currentIndex() > 0) {
-			setCurrentIndex(currentIndex() - 1);
+	const navigateTo = (index: number) => {
+		const events = timelineEvents();
+		if (index >= 0 && index < events.length) {
+			setCurrentIndex(index);
 		}
 	};
 
+	const handlePrevClick = () => {
+		navigateTo(currentIndex() - 1);
+	};
+
 	const handleNextClick = () => {
-		if (currentIndex() < timelineEvents().length - 1) {
-			setCurrentIndex(currentIndex() + 1);
+		navigateTo(currentIndex() + 1);
+	};
+
+	const handleKeyDown = (e: KeyboardEvent) => {
+		if (e.key === "ArrowLeft") {
+			navigateTo(currentIndex() - 1);
+		} else if (e.key === "ArrowRight") {
+			navigateTo(currentIndex() + 1);
 		}
 	};
+
+	onMount(() => {
+		window.addEventListener("keydown", handleKeyDown);
+		return () => {
+			window.removeEventListener("keydown", handleKeyDown);
+		};
+	});
 
 	return (
 		<div
