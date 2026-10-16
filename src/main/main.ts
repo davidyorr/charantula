@@ -34,6 +34,8 @@ app.whenReady().then(() => {
 		images: imagesHandlers,
 	});
 
+	const isTesting = process.env.PLAYWRIGHT_TEST === "1";
+
 	const win = new BrowserWindow({
 		title: "Main window",
 		webPreferences: {
@@ -41,6 +43,7 @@ app.whenReady().then(() => {
 			contextIsolation: true,
 			nodeIntegration: false,
 		},
+		show: !isTesting,
 	});
 
 	if (process.env.VITE_DEV_SERVER_URL) {
