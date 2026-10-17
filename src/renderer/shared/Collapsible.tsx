@@ -19,6 +19,7 @@ type Props = {
 	selected?: boolean;
 	onClick?: (e: MouseEvent) => void;
 	onDoubleClick?: (e: MouseEvent) => void;
+	"data-testid"?: string;
 };
 
 export const Collapsible: Component<Props> = (props) => {
@@ -35,6 +36,7 @@ export const Collapsible: Component<Props> = (props) => {
 		"selected",
 		"onClick",
 		"onDoubleClick",
+		"data-testid",
 	]);
 
 	return (
@@ -43,6 +45,7 @@ export const Collapsible: Component<Props> = (props) => {
 			{...(local.open !== undefined ? { open: local.open } : {})}
 			{...(local.onOpenChange ? { onOpenChange: local.onOpenChange } : {})}
 			class={`${styles.root} ${local.class || ""}`.trim()}
+			data-testid={local["data-testid"]}
 		>
 			<div
 				class={`${styles.header} ${

@@ -57,7 +57,7 @@ test("stores a chapter's image in the project folder", async ({
 	tempDir,
 }) => {
 	await addCollection(window, "Fellowship of the Ring");
-	await addChapter(window, "Chapter 1");
+	await addChapter(window, "Fellowship of the Ring", "Chapter 1");
 
 	await chooseImage(app, window, writePng(tempDir, "white"));
 	await expectPreviewColor(window, "white");
@@ -70,7 +70,7 @@ test("stores a chapter's image in the project folder", async ({
 test("adds an event to a chapter", async ({ window }) => {
 	const sidebar = getSidebar(window);
 	await addCollection(window, "Fellowship of the Ring");
-	await addChapter(window, "Chapter 1");
+	await addChapter(window, "Fellowship of the Ring", "Chapter 1");
 	await sidebar.getByText("Fellowship of the Ring").click();
 
 	await sidebar.getByRole("button", { name: "Add event" }).click();

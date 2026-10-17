@@ -197,18 +197,40 @@ export async function addCollection(window: Page, title: string) {
 	await titleInput.blur();
 }
 
-export async function addChapter(window: Page, title: string) {
-	await getSidebar(window).getByRole("button", { name: "Add chapter" }).click();
+export async function addChapter(
+	window: Page,
+	collection: string,
+	title: string,
+) {
+	await getSidebar(window)
+		.getByTestId(`collection-${collection}`)
+		.getByRole("button", { name: "Add chapter" })
+		.click();
 	const titleInput = window.getByPlaceholder("Chapter Title (e.g. Chapter 1)");
 	await titleInput.fill(title);
 	await titleInput.blur();
 }
 
-export async function addEvent(window: Page, title: string) {
-	await getSidebar(window).getByRole("button", { name: "Add event" }).click();
+export async function addEvent(
+	window: Page,
+	collection: string,
+	chapter: string,
+	title: string,
+	synopsis?: string,
+) {
+	await getSidebar(window)
+		.getByTestId(`collection-${collection}-chapter-${chapter}`)
+		.getByRole("button", { name: "Add event" })
+		.click();
 	const titleInput = window.getByPlaceholder("Event Title");
 	await titleInput.fill(title);
 	await titleInput.blur();
+
+	if (synopsis) {
+		const synopsisInput = window.getByPlaceholder("Content...");
+		await synopsisInput.fill(synopsis);
+		await synopsisInput.blur();
+	}
 }
 
 /** Picks an image for the currently open item via the mocked native dialog. */

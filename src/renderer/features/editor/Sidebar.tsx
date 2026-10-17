@@ -153,6 +153,7 @@ export const Sidebar: Component<Props> = (props) => {
 						>
 							<DragWrapper kind="collection" id={collection.id} acceptsChildren>
 								<Collapsible
+									data-testid={`collection-${collection.title}`}
 									label={collection.title}
 									variant="node"
 									indent={1}
@@ -216,6 +217,7 @@ export const Sidebar: Component<Props> = (props) => {
 														acceptsChildren
 													>
 														<Collapsible
+															data-testid={`collection-${collection.title}-chapter-${chapter.title}`}
 															label={chapter.title}
 															variant="node"
 															indent={2}

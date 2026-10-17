@@ -10,6 +10,7 @@
 		"build": "vite build",
 		"start": "electron .",
 		"test": "npm run build && npx playwright test",
+		"test:debug": "npm run build && npx playwright test --debug inspector",
 		"typecheck": "tsc --build --noEmit",
 		"lint": "eslint .",
 		"format:check": "node --experimental-strip-types ./node_modules/prettier/bin/prettier.cjs . --check",
