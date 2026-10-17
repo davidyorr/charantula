@@ -4,7 +4,6 @@
 	flex: 1;
 	margin: 0 auto;
 	width: 100%;
-	gap: var(--space-4);
 	background-size: cover;
 	background-position: center;
 	background-repeat: no-repeat;
@@ -21,7 +20,7 @@
 	align-items: center;
 	justify-content: center;
 	gap: var(--space-4);
-	background-color: rgba(0, 0, 0, 0.4);
+	background-color: rgba(0, 0, 0, 0.6);
 }
 
 .nav button {
@@ -36,17 +35,33 @@
 
 .eventContent {
 	flex: 1;
-	overflow-y: auto;
-	padding: var(--space-6);
-	padding-bottom: 0;
-	align-content: flex-end;
+	display: flex;
+	flex-direction: column;
+	min-height: 0;
+}
+
+.gradientSpacer {
+	flex: 1;
+	/* quadratic ease-out: opacity(p) = 0.6 * (1 - p)², p = progress from bottom */
+	background: linear-gradient(
+		to top,
+		rgba(0, 0, 0, 0.6) 0%,
+		rgba(0, 0, 0, 0.444) 14%,
+		rgba(0, 0, 0, 0.311) 28%,
+		rgba(0, 0, 0, 0.202) 42%,
+		rgba(0, 0, 0, 0.116) 56%,
+		rgba(0, 0, 0, 0.054) 70%,
+		rgba(0, 0, 0, 0.019) 82%,
+		rgba(0, 0, 0, 0.004) 92%,
+		rgba(0, 0, 0, 0) 100%
+	);
 }
 
 .eventPanel {
 	display: flex;
 	flex-direction: column;
-	background-color: rgba(0, 0, 0, 0.35);
-	border-radius: var(--radius-lg);
+	background-color: rgba(0, 0, 0, 0.6);
+	overflow-y: auto;
 }
 
 .eventMeta {

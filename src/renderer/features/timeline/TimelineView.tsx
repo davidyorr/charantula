@@ -244,6 +244,7 @@ export const TimelineView: Component<Props> = (props) => {
 				}
 			>
 				<div class={styles.eventContent}>
+					<div class={styles.gradientSpacer} data-testid="gradient-spacer" />
 					<Show when={currentEvent()}>
 						{(ev) => (
 							<div class={styles.eventPanel}>
