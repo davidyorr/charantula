@@ -1,6 +1,7 @@
-import { useNavigate, useParams } from "@solidjs/router";
+import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import { ChevronLeft, ChevronRight } from "lucide-solid";
 import {
+	createEffect,
 	createMemo,
 	createResource,
 	createSignal,
@@ -35,6 +36,23 @@ export const TimelineView: Component<Props> = (props) => {
 		return collectionId ? project.collections.get(collectionId) : undefined;
 	});
 	const character = createMemo(() => project.characters.get(props.characterId));
+
+	const [searchParams] = useSearchParams();
+
+	// Initialize currentIndex from the URL so navigation away and back
+	// restores the user's position.
+	const initialIndex = () => {
+		const eventIndex = searchParams.eventIndex;
+		if (eventIndex !== undefined) {
+			const index = Number(eventIndex);
+			if (!Number.isNaN(index)) {
+				return index;
+			}
+		}
+		return 0;
+	};
+
+	const [currentIndex, setCurrentIndex] = createSignal<number>(initialIndex());
 
 	// Fetch all event-character join rows for this character
 	const [eventChars] = createResource(
@@ -103,8 +121,6 @@ export const TimelineView: Component<Props> = (props) => {
 
 		return relevantEvents;
 	});
-
-	const [currentIndex, setCurrentIndex] = createSignal(0);
 
 	const currentEvent = createMemo(() => {
 		const events = timelineEvents();
@@ -197,10 +213,17 @@ export const TimelineView: Component<Props> = (props) => {
 
 	const navigate = useNavigate();
 	const params = useParams();
+	const [, setSearchParams] = useSearchParams();
+
+	// Persist the current event index in the URL so navigation away and back
+	// restores the user's position.
+	createEffect(() => {
+		setSearchParams({ eventIndex: String(currentIndex()) });
+	});
 
 	const handleCharacterRefClick = (characterId: string) => {
 		const projectName = params.projectName as string;
-		const backPath = `/timeline/${encodeURIComponent(projectName)}?chapter=${props.chapterId}&character=${props.characterId}`;
+		const backPath = `/timeline/${encodeURIComponent(projectName)}?chapter=${props.chapterId}&character=${props.characterId}&eventIndex=${currentIndex()}`;
 		navigate(
 			`/timeline/${encodeURIComponent(projectName)}/character/${characterId}?back=${encodeURIComponent(backPath)}`,
 		);

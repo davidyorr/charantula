@@ -16,7 +16,10 @@ test("timeline shows events across collections and chapters", async ({
 	await createProjectViaForm(app, window, tempDir, "TimelineProject");
 
 	// Add Characters
-	await addCharacter(window, { name: "Frodo" });
+	await addCharacter(window, {
+		name: "Frodo",
+		synopsis: "A Hobbit of The Shire",
+	});
 	await addCharacter(window, { name: "Bilbo" });
 	await addCharacter(window, { name: "Gandalf" });
 	await addCharacter(window, { name: "Boromir" });
@@ -98,6 +101,22 @@ test("timeline shows events across collections and chapters", async ({
 	).toBeVisible();
 	await window.getByRole("button", { name: "Next event" }).click();
 
+	await expect(
+		window.getByRole("heading", {
+			name: "Frodo remembers Boromir's sacrifice",
+		}),
+	).toBeVisible();
+	await expect(
+		window.getByRole("button", { name: "Next event" }),
+	).toBeDisabled();
+
+	// View the Character card
+	await window.getByRole("button", { name: "Frodo" }).click();
+	await expect(window.getByText("Frodo")).toBeVisible();
+	await expect(window.getByText("A Hobbit of The Shire")).toBeVisible();
+
+	// Go back to Timeline, we should be on the same Event we left
+	await window.getByRole("button", { name: "Back" }).click();
 	await expect(
 		window.getByRole("heading", {
 			name: "Frodo remembers Boromir's sacrifice",
