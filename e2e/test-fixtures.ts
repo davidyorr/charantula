@@ -181,11 +181,22 @@ export async function createProjectViaForm(
 	await expect(window).toHaveURL(new RegExp(`.*#/edit/${name}`));
 }
 
-export async function addCharacter(window: Page, { name }: { name: string }) {
+export async function addCharacter(
+	window: Page,
+	{ name, synopsis }: { name: string; synopsis?: string },
+) {
 	await window.getByRole("button", { name: "Add character" }).click();
 	const nameInput = window.getByPlaceholder("Character Name");
 	await nameInput.fill(name);
 	await nameInput.blur();
+
+	if (synopsis) {
+		const synopsisInput = window.getByPlaceholder(
+			"A brief, spoiler-free summary of the character...",
+		);
+		await synopsisInput.fill(synopsis);
+		await synopsisInput.blur();
+	}
 }
 
 export async function addCollection(
