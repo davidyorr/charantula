@@ -34,7 +34,8 @@ app.whenReady().then(() => {
 		images: imagesHandlers,
 	});
 
-	const isTesting = process.env.PLAYWRIGHT_TEST === "1";
+	const showWindow =
+		process.env.PLAYWRIGHT_TEST !== "1" || process.env.PWDEBUG === "1";
 
 	const win = new BrowserWindow({
 		title: "Main window",
@@ -43,7 +44,7 @@ app.whenReady().then(() => {
 			contextIsolation: true,
 			nodeIntegration: false,
 		},
-		show: !isTesting,
+		show: showWindow,
 	});
 
 	if (process.env.VITE_DEV_SERVER_URL) {
