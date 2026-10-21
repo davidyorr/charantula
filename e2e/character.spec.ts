@@ -56,7 +56,7 @@ test("stores a character's image in the project folder", async ({
 	project,
 	tempDir,
 }) => {
-	await addCharacter(window, "Frodo Baggins");
+	await addCharacter(window, { name: "Frodo Baggins" });
 	await chooseImage(app, window, writePng(tempDir, "black"));
 
 	await expect(window.getByRole("button", { name: "Remove" })).toBeVisible();
@@ -72,12 +72,18 @@ test("stores a character's image in the project folder", async ({
 test("manages character aliases", async ({ window }) => {
 	// Create two collections with chapters so we have chapters to gate aliases to.
 	// Create them in reverse sortOrder order so we can verify the dropdown sorts them.
-	await addCollection(window, "The Two Towers");
-	await addChapter(window, "The Two Towers", "Chapter 2");
-	await addCollection(window, "The Fellowship of the Ring");
-	await addChapter(window, "The Fellowship of the Ring", "Chapter 1");
+	await addCollection(window, { title: "The Two Towers" });
+	await addChapter(window, {
+		collection: "The Two Towers",
+		title: "Chapter 2",
+	});
+	await addCollection(window, { title: "The Fellowship of the Ring" });
+	await addChapter(window, {
+		collection: "The Fellowship of the Ring",
+		title: "Chapter 1",
+	});
 
-	await addCharacter(window, "Frodo Baggins");
+	await addCharacter(window, { name: "Frodo Baggins" });
 
 	// --- Add an alias ---
 	await window.getByRole("button", { name: "Add alias" }).click();

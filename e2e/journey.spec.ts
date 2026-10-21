@@ -23,22 +23,24 @@ test("user can build out a project from scratch", async ({
 	const sidebar = getSidebar(window);
 
 	// A character with an image
-	await addCharacter(window, "Frodo Baggins");
+	await addCharacter(window, { name: "Frodo Baggins" });
 	await chooseImage(app, window, writePng(tempDir, "black"));
 
 	// A collection containing a chapter with an image
-	await addCollection(window, "Fellowship of the Ring");
-	await addChapter(window, "Fellowship of the Ring", "Chapter 1");
+	await addCollection(window, { title: "Fellowship of the Ring" });
+	await addChapter(window, {
+		collection: "Fellowship of the Ring",
+		title: "Chapter 1",
+	});
 	await chooseImage(app, window, writePng(tempDir, "white"));
 
 	// An event in that chapter, which inherits the chapter's image
 	await sidebar.getByText("Fellowship of the Ring").click();
-	await addEvent(
-		window,
-		"Fellowship of the Ring",
-		"Chapter 1",
-		"Gandalf arrives",
-	);
+	await addEvent(window, {
+		collection: "Fellowship of the Ring",
+		chapter: "Chapter 1",
+		title: "Gandalf arrives",
+	});
 	await expect(
 		window.getByText("Inherited from this event's chapter."),
 	).toBeVisible();

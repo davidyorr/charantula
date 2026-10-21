@@ -24,16 +24,18 @@ test("event inherits its chapter's image until it gets its own", async ({
 	);
 
 	// Arrange: a chapter with a white image, and an event inside it
-	await addCollection(window, "Fellowship of the Ring");
-	await addChapter(window, "Fellowship of the Ring", "Chapter 1");
+	await addCollection(window, { title: "Fellowship of the Ring" });
+	await addChapter(window, {
+		collection: "Fellowship of the Ring",
+		title: "Chapter 1",
+	});
 	await chooseImage(app, window, writePng(tempDir, "white"));
 	await sidebar.getByText("Fellowship of the Ring").click();
-	await addEvent(
-		window,
-		"Fellowship of the Ring",
-		"Chapter 1",
-		"Gandalf arrives",
-	);
+	await addEvent(window, {
+		collection: "Fellowship of the Ring",
+		chapter: "Chapter 1",
+		title: "Gandalf arrives",
+	});
 
 	// The event inherits the chapter's image
 	await expect(inheritedNotice).toBeVisible();

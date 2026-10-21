@@ -181,14 +181,17 @@ export async function createProjectViaForm(
 	await expect(window).toHaveURL(new RegExp(`.*#/edit/${name}`));
 }
 
-export async function addCharacter(window: Page, name: string) {
+export async function addCharacter(window: Page, { name }: { name: string }) {
 	await window.getByRole("button", { name: "Add character" }).click();
 	const nameInput = window.getByPlaceholder("Character Name");
 	await nameInput.fill(name);
 	await nameInput.blur();
 }
 
-export async function addCollection(window: Page, title: string) {
+export async function addCollection(
+	window: Page,
+	{ title }: { title: string },
+) {
 	await window.getByRole("button", { name: "Add collection" }).click();
 	const titleInput = window.getByPlaceholder(
 		"Collection Title (e.g. Fellowship of the Ring)",
@@ -199,8 +202,7 @@ export async function addCollection(window: Page, title: string) {
 
 export async function addChapter(
 	window: Page,
-	collection: string,
-	title: string,
+	{ collection, title }: { collection: string; title: string },
 ) {
 	await getSidebar(window)
 		.getByTestId(`collection-${collection}`)
@@ -213,10 +215,17 @@ export async function addChapter(
 
 export async function addEvent(
 	window: Page,
-	collection: string,
-	chapter: string,
-	title: string,
-	synopsis?: string,
+	{
+		collection,
+		chapter,
+		title,
+		synopsis,
+	}: {
+		collection: string;
+		chapter: string;
+		title: string;
+		synopsis?: string;
+	},
 ) {
 	await getSidebar(window)
 		.getByTestId(`collection-${collection}-chapter-${chapter}`)

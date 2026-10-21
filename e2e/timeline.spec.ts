@@ -16,49 +16,58 @@ test("timeline shows events across collections and chapters", async ({
 	await createProjectViaForm(app, window, tempDir, "TimelineProject");
 
 	// Add Characters
-	await addCharacter(window, "Frodo");
-	await addCharacter(window, "Bilbo");
-	await addCharacter(window, "Gandalf");
-	await addCharacter(window, "Boromir");
+	await addCharacter(window, { name: "Frodo" });
+	await addCharacter(window, { name: "Bilbo" });
+	await addCharacter(window, { name: "Gandalf" });
+	await addCharacter(window, { name: "Boromir" });
 
 	// Add Collections
-	await addCollection(window, "Fellowship of the Ring");
-	await addCollection(window, "The Two Towers");
+	await addCollection(window, { title: "Fellowship of the Ring" });
+	await addCollection(window, { title: "The Two Towers" });
 
 	// Add Chapters
-	await addChapter(window, "Fellowship of the Ring", "Chapter 1");
-	await addChapter(window, "Fellowship of the Ring", "Chapter 2");
-	await addChapter(window, "The Two Towers", "Chapter 1");
+	await addChapter(window, {
+		collection: "Fellowship of the Ring",
+		title: "Chapter 1",
+	});
+	await addChapter(window, {
+		collection: "Fellowship of the Ring",
+		title: "Chapter 2",
+	});
+	await addChapter(window, {
+		collection: "The Two Towers",
+		title: "Chapter 1",
+	});
 
 	// Add Events
-	await addEvent(
-		window,
-		"Fellowship of the Ring",
-		"Chapter 1",
-		"Bilbo leaves the Shire",
-		"[Bilbo] disappears during his birthday party and leaves the Ring to [Frodo].",
-	);
-	await addEvent(
-		window,
-		"Fellowship of the Ring",
-		"Chapter 2",
-		"Gandalf reveals the Ring's identity",
-		"[Gandalf] confirms that [Frodo]'s ring is the One Ring forged by Sauron.",
-	);
-	await addEvent(
-		window,
-		"Fellowship of the Ring",
-		"Chapter 2",
-		"Frodo agrees to leave the Shire",
-		"[Frodo] accepts that he must leave Bag End to protect the Shire from the danger surrounding the Ring.",
-	);
-	await addEvent(
-		window,
-		"The Two Towers",
-		"Chapter 1",
-		"Frodo remembers Boromir's sacrifice",
-		"[Frodo] reflects on [Boromir]'s sacrifice while continuing his journey toward Mordor.",
-	);
+	await addEvent(window, {
+		collection: "Fellowship of the Ring",
+		chapter: "Chapter 1",
+		title: "Bilbo leaves the Shire",
+		synopsis:
+			"[Bilbo] disappears during his birthday party and leaves the Ring to [Frodo].",
+	});
+	await addEvent(window, {
+		collection: "Fellowship of the Ring",
+		chapter: "Chapter 2",
+		title: "Gandalf reveals the Ring's identity",
+		synopsis:
+			"[Gandalf] confirms that [Frodo]'s ring is the One Ring forged by Sauron.",
+	});
+	await addEvent(window, {
+		collection: "Fellowship of the Ring",
+		chapter: "Chapter 2",
+		title: "Frodo agrees to leave the Shire",
+		synopsis:
+			"[Frodo] accepts that he must leave Bag End to protect the Shire from the danger surrounding the Ring.",
+	});
+	await addEvent(window, {
+		collection: "The Two Towers",
+		chapter: "Chapter 1",
+		title: "Frodo remembers Boromir's sacrifice",
+		synopsis:
+			"[Frodo] reflects on [Boromir]'s sacrifice while continuing his journey toward Mordor.",
+	});
 
 	// Navigate to Timeline Page
 	await window.getByRole("button", { name: "Timeline" }).click();

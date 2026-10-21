@@ -19,7 +19,7 @@ test("persists a character's image across an app restart", async ({
 	tempDir,
 	launchApp,
 }) => {
-	await addCharacter(window, "Frodo Baggins");
+	await addCharacter(window, { name: "Frodo Baggins" });
 	await chooseImage(app, window, writePng(tempDir, "black"));
 
 	// Wait for concrete signs that the data reached disk before closing,
