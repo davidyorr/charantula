@@ -22,6 +22,32 @@ type Props = {
 export const CharacterEditor: Component<Props> = (props) => {
 	const character = createMemo(() => project.characters.get(props.id));
 
+	const handleDisambiguationChange = async (e: Event) => {
+		const target = e.target as HTMLInputElement;
+		const newValue = target.value || null;
+		const oldValue = character()?.disambiguation ?? null;
+		if (newValue === oldValue) {
+			return;
+		}
+
+		const updated = await window.api.characters.update(props.id, {
+			disambiguation: newValue,
+		});
+		project.characters.update(updated);
+	};
+
+	const hasDuplicateName = createMemo(() => {
+		const char = character();
+		if (!char) {
+			return false;
+		}
+		const lower = char.name.toLowerCase();
+		return (
+			project.characters.list().filter((c) => c.name.toLowerCase() === lower)
+				.length > 1
+		);
+	});
+
 	const handleNameChange = async (e: Event) => {
 		const target = e.target as HTMLInputElement;
 		const newName = target.value;
@@ -180,6 +206,17 @@ export const CharacterEditor: Component<Props> = (props) => {
 							onChange={handleNameChange}
 							placeholder="Character Name"
 						/>
+						<Show when={hasDuplicateName() || Boolean(char().disambiguation)}>
+							<div class={styles.field}>
+								<label class={styles.label}>Disambiguation</label>
+								<input
+									class={styles.aliasInput}
+									value={char().disambiguation ?? ""}
+									onChange={handleDisambiguationChange}
+									placeholder="e.g. the Conqueror"
+								/>
+							</div>
+						</Show>
 					</header>
 
 					<ImageField

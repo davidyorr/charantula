@@ -17,7 +17,22 @@ import styles from "./TimelineView.module.css";
 
 type RichNode =
 	| { type: "text"; text: string }
-	| { type: "character_ref"; characterId: string; text: string };
+	| {
+			type: "character_ref";
+			characterId: string;
+			text: string;
+			disambiguation?: string | null;
+	  }
+	| { type: "unresolved_ref"; text: string }
+	| {
+			type: "ambiguous_ref";
+			text: string;
+			candidates: Array<{
+				characterId: string;
+				name: string;
+				disambiguation: string | null;
+			}>;
+	  };
 
 type ImageResult = {
 	path: string;
@@ -235,14 +250,44 @@ export const TimelineView: Component<Props> = (props) => {
 				return node.text;
 			}
 			if (node.type === "character_ref") {
+				const char = project.characters.get(node.characterId);
+				let label: string;
+				if (char && node.text === char.name) {
+					// Wikilink target is the character name — show name
+					// (with disambiguation if present).
+					label = char.disambiguation
+						? `${char.name} (${char.disambiguation})`
+						: char.name;
+				} else {
+					// Alias or custom display text (e.g. `[[Name|display]]`) —
+					// show the text as typed.
+					label = node.text;
+				}
 				return (
 					<button
 						type="button"
 						class={styles.characterRef}
 						onClick={() => handleCharacterRefClick(node.characterId)}
 					>
-						{node.text}
+						{label}
 					</button>
+				);
+			}
+			if (node.type === "unresolved_ref") {
+				return <code class={styles.unresolvedRef}>{node.text}</code>;
+			}
+			if (node.type === "ambiguous_ref") {
+				return (
+					<code
+						class={styles.ambiguousRef}
+						title={node.candidates
+							.map((c) =>
+								c.disambiguation ? `${c.name} ${c.disambiguation}` : c.name,
+							)
+							.join(", ")}
+					>
+						{node.text}
+					</code>
 				);
 			}
 			return null;

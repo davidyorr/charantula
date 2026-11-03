@@ -52,8 +52,8 @@ const api: IpcApi = {
 		update: (id, patch) => ipcRenderer.invoke("characters:update", id, patch),
 		delete: (id) => ipcRenderer.invoke("characters:delete", id),
 		reorder: (order) => ipcRenderer.invoke("characters:reorder", order),
-		resolveIdByName: (name) =>
-			ipcRenderer.invoke("characters:resolveIdByName", name),
+		resolveCharacterRef: (target) =>
+			ipcRenderer.invoke("characters:resolveCharacterRef", target),
 		setImage: (id, sourceFilePath) =>
 			ipcRenderer.invoke("characters:setImage", id, sourceFilePath),
 		removeImage: (id) => ipcRenderer.invoke("characters:removeImage", id),

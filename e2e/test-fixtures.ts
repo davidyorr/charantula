@@ -183,7 +183,15 @@ export async function createProjectViaForm(
 
 export async function addCharacter(
 	window: Page,
-	{ name, synopsis }: { name: string; synopsis?: string },
+	{
+		name,
+		synopsis,
+		aliases,
+	}: {
+		name: string;
+		synopsis?: string;
+		aliases?: Array<{ name: string; introducedIn?: string }>;
+	},
 ) {
 	await window.getByRole("button", { name: "Add character" }).click();
 	const nameInput = window.getByPlaceholder("Character Name");
@@ -196,6 +204,53 @@ export async function addCharacter(
 		);
 		await synopsisInput.fill(synopsis);
 		await synopsisInput.blur();
+	}
+
+	if (aliases) {
+		for (let i = 0; i < aliases.length; i++) {
+			await window.getByRole("button", { name: "Add alias" }).click();
+			const aliasInput = window.getByPlaceholder("Alias name").nth(i);
+			await aliasInput.fill(aliases[i].name);
+			await aliasInput.blur();
+
+			if (aliases[i].introducedIn) {
+				const select = window
+					.getByTitle("When this alias was introduced")
+					.nth(i);
+				await select.click();
+				await window
+					.getByRole("option", { name: aliases[i].introducedIn })
+					.click();
+			}
+		}
+	}
+}
+
+/**
+ * Selects a character by name in the sidebar and edits its fields.
+ *
+ * Use this after `addCharacter` to set fields that are hidden until certain
+ * conditions are met (e.g. disambiguation only appears when the character's
+ * name is a duplicate).
+ *
+ * @param window - Playwright page
+ * @param name - Character name to find in the sidebar
+ * @param index - 0-based index among characters with that name
+ * @param updates - Fields to update (disambiguation, aliases, etc.)
+ */
+export async function editCharacter(
+	window: Page,
+	name: string,
+	index: number,
+	updates: { disambiguation?: string },
+) {
+	// Select the nth character button with this name in the sidebar
+	await getSidebar(window).getByRole("button", { name }).nth(index).click();
+
+	if (updates.disambiguation !== undefined) {
+		const input = window.getByPlaceholder("e.g. the Conqueror");
+		await input.fill(updates.disambiguation);
+		await input.blur();
 	}
 }
 
@@ -264,6 +319,23 @@ export async function chooseImage(
 	await expect(
 		window.getByRole("button", { name: "Replace Image" }),
 	).toBeVisible();
+}
+
+/**
+ * Navigates to the Timeline page and selects a collection, chapter, and
+ * character. Waits until the timeline event panel is visible.
+ */
+export async function goToTimeline(
+	window: Page,
+	collection: string,
+	character: string,
+) {
+	await window.getByRole("button", { name: "Timeline" }).click();
+	await window.getByRole("button", { name: collection }).click();
+	await window.getByRole("button", { name: "Chapter" }).click();
+	await window.getByRole("button", { name: "Continue" }).click();
+	await window.getByRole("button", { name: character }).click();
+	await expect(window.getByRole("heading")).toBeVisible();
 }
 
 // ---------------------------------------------------------------------------

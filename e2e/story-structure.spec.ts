@@ -89,7 +89,7 @@ test("adds an event to a chapter", async ({ window }) => {
 	await titleInput.blur();
 
 	const contentInput = window.getByPlaceholder("Content");
-	await contentInput.fill("[Gandalf] arrives in the Shire");
+	await contentInput.fill("[[Gandalf]] arrives in the Shire");
 	await contentInput.blur();
 
 	// The event is nested under its chapter

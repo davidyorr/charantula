@@ -1,0 +1,2 @@
+ALTER TABLE `characters` ADD `disambiguation` text;--> statement-breakpoint
+CREATE UNIQUE INDEX `idx_characters_name_disambiguation_unique` ON `characters` ("name" COLLATE NOCASE,"disambiguation" COLLATE NOCASE) WHERE "characters"."disambiguation" IS NOT NULL;

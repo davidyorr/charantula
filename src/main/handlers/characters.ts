@@ -1,4 +1,4 @@
-import { eq, inArray, like } from "drizzle-orm";
+import { eq, inArray, sql } from "drizzle-orm";
 
 import {
 	chapters,
@@ -95,6 +95,21 @@ function isAtOrBefore(a: ChapterPosition, b: ChapterPosition): boolean {
 		return a.collectionSortOrder < b.collectionSortOrder;
 	}
 	return a.chapterSortOrder <= b.chapterSortOrder;
+}
+
+function validateDisambiguation(value: string): string {
+	const trimmed = value.trim();
+	if (trimmed === "") {
+		throw new Error("disambiguation must not be blank");
+	}
+	if (
+		trimmed.includes("[[") ||
+		trimmed.includes("]]") ||
+		trimmed.includes("|")
+	) {
+		throw new Error("disambiguation must not contain [[, ]], or |");
+	}
+	return trimmed;
 }
 
 export const charactersHandlers: IpcApi["characters"] = {
@@ -219,19 +234,34 @@ export const charactersHandlers: IpcApi["characters"] = {
 	},
 
 	async create(input) {
+		const disambiguation = input.disambiguation
+			? validateDisambiguation(input.disambiguation)
+			: null;
+
 		const db = getDb();
 		const sortOrder =
 			input.sortOrder ??
 			(await nextSortOrder(db, characters, characters.sortOrder));
 		const [row] = await db
 			.insert(characters)
-			.values({ ...input, sortOrder })
+			.values({ ...input, disambiguation, sortOrder })
 			.returning();
 		return row;
 	},
 
 	async update(id, patch) {
 		const db = getDb();
+
+		// Trim and validate disambiguation if present
+		if (patch.disambiguation !== undefined) {
+			if (patch.disambiguation === null) {
+				// Explicit null clears the disambiguation
+			} else if (patch.disambiguation.trim() === "") {
+				patch.disambiguation = null;
+			} else {
+				patch.disambiguation = validateDisambiguation(patch.disambiguation);
+			}
+		}
 
 		// If the patch does not include a name, the image filename does not change
 		if (patch.name !== undefined) {
@@ -308,17 +338,67 @@ export const charactersHandlers: IpcApi["characters"] = {
 		});
 	},
 
-	async resolveIdByName(name) {
+	async resolveCharacterRef(target) {
 		const db = getDb();
+		const lowerTarget = target.toLowerCase();
 
-		const [char] = await db
-			.select({ id: characters.id })
+		// Match against character name and disambiguation.
+		const characterMatches = await db
+			.select({
+				characterId: characters.id,
+				name: characters.name,
+				disambiguation: characters.disambiguation,
+			})
 			.from(characters)
-			.where(like(characters.name, name));
+			.where(eq(sql`lower(${characters.name})`, lowerTarget));
 
-		return char?.id ?? null;
+		// Match against aliases.
+		const aliasMatches = await db
+			.select({
+				characterId: characterAliases.characterId,
+				name: characters.name,
+				disambiguation: characters.disambiguation,
+			})
+			.from(characterAliases)
+			.innerJoin(characters, eq(characterAliases.characterId, characters.id))
+			.where(eq(sql`lower(${characterAliases.alias})`, lowerTarget));
 
-		// Fall back to alias?
+		// Match against name + disambiguation (e.g. "Aragorn II" → Aragorn with
+		// disambiguation "II"). Fetch all characters and filter in JS.
+		const allChars = await db
+			.select({
+				characterId: characters.id,
+				name: characters.name,
+				disambiguation: characters.disambiguation,
+			})
+			.from(characters);
+		const disambiguationMatches = allChars.filter((c) => {
+			if (!c.disambiguation) {
+				return false;
+			}
+			const combined = `${c.name} ${c.disambiguation}`.toLowerCase();
+			return combined === lowerTarget;
+		});
+
+		// Deduplicate by characterId (a name might also appear as an alias).
+		const seen = new Set<string>();
+		const results: Array<{
+			characterId: string;
+			name: string;
+			disambiguation: string | null;
+		}> = [];
+		for (const match of [
+			...characterMatches,
+			...disambiguationMatches,
+			...aliasMatches,
+		]) {
+			if (!seen.has(match.characterId)) {
+				seen.add(match.characterId);
+				results.push(match);
+			}
+		}
+
+		return results;
 	},
 
 	async setImage(id, sourceFilePath) {

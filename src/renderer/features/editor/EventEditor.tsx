@@ -12,10 +12,29 @@ type Props = {
 
 type ContentNode =
 	| { type: "text"; text: string }
-	| { type: "character_ref"; characterId: string; text: string };
+	| {
+			type: "character_ref";
+			characterId: string;
+			text: string;
+			disambiguation?: string | null;
+	  }
+	| {
+			type: "unresolved_ref";
+			text: string;
+	  }
+	| {
+			type: "ambiguous_ref";
+			text: string;
+			candidates: Array<{ characterId: string; name: string }>;
+	  };
 
 /**
- * Parses raw text containing [Character] into structured content nodes.
+ * Parses raw text containing [[Target]] wiki-links into structured content
+ * nodes. Handles:
+ *   - `[[Target]]` — display is the target text as typed
+ *   - `[[Target|display]]` — shows `display` but resolves against `Target`
+ *   - `\[[` — literal `[[` in the output (backslash dropped)
+ *   - Empty target or empty display → plain text + diagnostic
  */
 async function parseToNodes(rawText: string): Promise<Array<ContentNode>> {
 	if (!rawText) {
@@ -23,44 +42,116 @@ async function parseToNodes(rawText: string): Promise<Array<ContentNode>> {
 	}
 
 	const nodes: Array<ContentNode> = [];
-	const regex = /\[([^\]]+)\]/g;
 
-	let lastIndex = 0;
-	let match;
+	// State machine to handle escaping and pipe splitting.
+	let i = 0;
+	const len = rawText.length;
 
-	// Loop through all bracketed names
-	while ((match = regex.exec(rawText)) !== null) {
-		// Push any plain text before this tag
-		if (match.index > lastIndex) {
-			nodes.push({
-				type: "text",
-				text: rawText.slice(lastIndex, match.index),
-			});
+	while (i < len) {
+		// Check for escaped \[
+		if (rawText[i] === "\\" && rawText[i + 1] === "[") {
+			// Consume both characters and emit a literal "["
+			nodes.push({ type: "text", text: "[" });
+			i += 2;
+			continue;
 		}
 
-		const characterName = match[1];
+		// Look for [[
+		if (rawText[i] === "[" && rawText[i + 1] === "[") {
+			const start = i;
+			i += 2; // skip [[
 
-		// Get the ID from the DB
-		const characterId =
-			await window.api.characters.resolveIdByName(characterName);
+			// Find the closing ]], respecting nesting (not really needed per spec
+			// but safe to stop at first ]]).
+			let close = -1;
+			while (i < len) {
+				if (rawText[i] === "]" && rawText[i + 1] === "]") {
+					close = i;
+					break;
+				}
+				i++;
+			}
 
-		// Push the character reference
-		nodes.push({
-			type: "character_ref",
-			// Fallback string if the character doesn't exist
-			characterId: characterId ?? "unresolved",
-			text: characterName,
-		});
+			if (close === -1) {
+				// No closing ]], treat as plain text
+				nodes.push({ type: "text", text: rawText.slice(start) });
+				break;
+			}
 
-		lastIndex = regex.lastIndex;
-	}
+			const inner = rawText.slice(start + 2, close);
+			i += 2; // skip ]]
 
-	// Push any remaining text after the last bracket
-	if (lastIndex < rawText.length) {
-		nodes.push({
-			type: "text",
-			text: rawText.slice(lastIndex),
-		});
+			// Split on the first unescaped |
+			const pipeIdx = inner.indexOf("|");
+			let target: string;
+			let display: string | null;
+
+			if (pipeIdx === -1) {
+				target = inner.trim();
+				display = target;
+			} else {
+				target = inner.slice(0, pipeIdx).trim();
+				display = inner.slice(pipeIdx + 1).trim();
+			}
+
+			// Validate: empty target or empty display is invalid
+			if (!target || !display) {
+				nodes.push({ type: "text", text: rawText.slice(start, i) });
+				continue;
+			}
+
+			// Check for invalid characters in target
+			if (inner.includes("[[") || inner.includes("]]")) {
+				nodes.push({ type: "text", text: rawText.slice(start, i) });
+				continue;
+			}
+
+			// Resolve the target
+			const candidates =
+				await window.api.characters.resolveCharacterRef(target);
+
+			if (candidates.length === 0) {
+				nodes.push({
+					type: "unresolved_ref",
+					text: rawText.slice(start, i),
+				});
+			} else if (candidates.length === 1) {
+				nodes.push({
+					type: "character_ref",
+					characterId: candidates[0].characterId,
+					text: display,
+					disambiguation: candidates[0].disambiguation,
+				});
+			} else {
+				nodes.push({
+					type: "ambiguous_ref",
+					text: rawText.slice(start, i),
+					candidates: candidates.map((c) => ({
+						characterId: c.characterId,
+						name: c.name,
+						disambiguation: c.disambiguation,
+					})),
+				});
+			}
+
+			continue;
+		}
+
+		// Regular character — accumulate plain text, stopping at `\` or `[`
+		// so the loop can re-check for `[[` or `\[[` on the next iteration.
+		const textStart = i;
+		while (i < len && rawText[i] !== "\\" && rawText[i] !== "[") {
+			i++;
+		}
+		if (i > textStart) {
+			nodes.push({ type: "text", text: rawText.slice(textStart, i) });
+		} else if (i < len) {
+			// We stopped at `\` or `[` without consuming anything.
+			// Emit the character and advance by one so the loop can
+			// re-check it on the next iteration.
+			nodes.push({ type: "text", text: rawText[i] });
+			i++;
+		}
 	}
 
 	return nodes;
@@ -68,7 +159,8 @@ async function parseToNodes(rawText: string): Promise<Array<ContentNode>> {
 
 /**
  * Keeps the event_characters join table in sync with the character_ref
- * nodes actually present in the Event's content.
+ * nodes actually present in the Event's content. Only resolved references
+ * (character_ref nodes) are tracked; unresolved/ambiguous refs are ignored.
  */
 async function syncEventCharacters(
 	eventId: string,
@@ -77,8 +169,7 @@ async function syncEventCharacters(
 	const referencedCharacterIds = new Set(
 		nodes
 			.filter((node) => node.type === "character_ref")
-			.map((node) => node.characterId)
-			.filter((characterId) => characterId !== "unresolved"),
+			.map((node) => node.characterId),
 	);
 
 	const existing = await window.api.eventCharacters.listByEvent(eventId);

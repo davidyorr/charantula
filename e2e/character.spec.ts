@@ -48,6 +48,12 @@ test("adds and edits characters", async ({ window }) => {
 		sidebar.getByRole("button", { name: "Frodo Baggins" }),
 	).toBeVisible();
 	await expect(sidebar.getByRole("button", { name: "Gandalf" })).toBeVisible();
+
+	// Clicking the names changes the character being edited
+	await sidebar.getByRole("button", { name: "Frodo Baggins" }).click();
+	await expect(nameInput).toHaveValue("Frodo Baggins");
+	await sidebar.getByRole("button", { name: "Gandalf" }).click();
+	await expect(nameInput).toHaveValue("Gandalf");
 });
 
 test("stores a character's image in the project folder", async ({

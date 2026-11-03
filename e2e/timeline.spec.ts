@@ -6,6 +6,7 @@ import {
 	addCollection,
 	addEvent,
 	createProjectViaForm,
+	editCharacter,
 } from "./test-fixtures";
 
 test("timeline shows events across collections and chapters", async ({
@@ -21,8 +22,16 @@ test("timeline shows events across collections and chapters", async ({
 		synopsis: "A Hobbit of The Shire",
 	});
 	await addCharacter(window, { name: "Bilbo" });
-	await addCharacter(window, { name: "Gandalf" });
+	await addCharacter(window, {
+		name: "Gandalf",
+		aliases: [{ name: "the Grey Pilgrim" }],
+	});
 	await addCharacter(window, { name: "Boromir" });
+	// Two characters sharing a name, told apart by disambiguation
+	await addCharacter(window, { name: "Aragorn" });
+	await addCharacter(window, { name: "Aragorn" });
+	await editCharacter(window, "Aragorn", 0, { disambiguation: "II" });
+	await editCharacter(window, "Aragorn", 1, { disambiguation: "I" });
 
 	// Add Collections
 	await addCollection(window, { title: "Fellowship of the Ring" });
@@ -43,33 +52,53 @@ test("timeline shows events across collections and chapters", async ({
 	});
 
 	// Add Events
+	// Escaped bracket: `\[[` is a literal "[", so the reader sees
+	// "[Gandalf] arrives in the Shire ..."
+	await addEvent(window, {
+		collection: "Fellowship of the Ring",
+		chapter: "Chapter 1",
+		title: "Gandalf arrives in the Shire",
+		synopsis:
+			"\\[[[Gandalf]]] arrives in the Shire with fireworks for the birthday party of [[Bilbo]] and [[Frodo]].",
+	});
+	// Simple references
 	await addEvent(window, {
 		collection: "Fellowship of the Ring",
 		chapter: "Chapter 1",
 		title: "Bilbo leaves the Shire",
 		synopsis:
-			"[Bilbo] disappears during his birthday party and leaves the Ring to [Frodo].",
+			"[[Bilbo]] disappears during his birthday party and leaves the Ring to [[Frodo]].",
 	});
 	await addEvent(window, {
 		collection: "Fellowship of the Ring",
 		chapter: "Chapter 2",
 		title: "Gandalf reveals the Ring's identity",
 		synopsis:
-			"[Gandalf] confirms that [Frodo]'s ring is the One Ring forged by Sauron.",
+			"[[Gandalf]] confirms that [[Frodo]]'s ring is the One Ring forged by Sauron.",
 	});
 	await addEvent(window, {
 		collection: "Fellowship of the Ring",
 		chapter: "Chapter 2",
 		title: "Frodo agrees to leave the Shire",
 		synopsis:
-			"[Frodo] accepts that he must leave Bag End to protect the Shire from the danger surrounding the Ring.",
+			"[[Frodo]] accepts that he must leave Bag End to protect the Shire from the danger surrounding the Ring.",
 	});
+	// Unresolved ([[Elrond]]), alias ([[the Grey Pilgrim]]), disambiguation
+	// ([[Aragorn II]]) and ambiguous ([[Aragorn]]) references
+	await addEvent(window, {
+		collection: "Fellowship of the Ring",
+		chapter: "Chapter 2",
+		title: "The Council of Elrond",
+		synopsis:
+			"[[Elrond]] convenes a council at Rivendell, where [[Frodo]] volunteers to bear the Ring and [[the Grey Pilgrim]] vows to guide him. [[Aragorn II]] pledges his sword to the quest, honoring his ancestor [[Aragorn]].",
+	});
+	// Custom display text
 	await addEvent(window, {
 		collection: "The Two Towers",
 		chapter: "Chapter 1",
 		title: "Frodo remembers Boromir's sacrifice",
 		synopsis:
-			"[Frodo] reflects on [Boromir]'s sacrifice while continuing his journey toward Mordor.",
+			"[[Frodo]] reflects on the sacrifice of [[Boromir|the son of Denethor]] while continuing his journey toward Mordor.",
 	});
 
 	// Navigate to Timeline Page
@@ -83,9 +112,25 @@ test("timeline shows events across collections and chapters", async ({
 	// Select Character
 	await window.getByRole("button", { name: "Frodo" }).click();
 
-	// Verify the 4 Frodo events appear in order
+	// Verify the 6 Frodo events appear in order
+	await expect(
+		window.getByRole("heading", { name: "Gandalf arrives in the Shire" }),
+	).toBeVisible();
+	// Escaped bracket renders a literal "[" and no false reference
+	await expect(
+		window.getByText("[Gandalf] arrives in the Shire with fireworks"),
+	).toBeVisible();
+	await expect(window.locator("code", { hasText: "Gandalf" })).toHaveCount(0);
+	await window.getByRole("button", { name: "Next event" }).click();
+
 	await expect(
 		window.getByRole("heading", { name: "Bilbo leaves the Shire" }),
+	).toBeVisible();
+	// Simple references display the target text as-is
+	await expect(
+		window.getByText(
+			"Bilbo disappears during his birthday party and leaves the Ring to Frodo.",
+		),
 	).toBeVisible();
 	await window.getByRole("button", { name: "Next event" }).click();
 
@@ -102,10 +147,43 @@ test("timeline shows events across collections and chapters", async ({
 	await window.getByRole("button", { name: "Next event" }).click();
 
 	await expect(
+		window.getByRole("heading", { name: "The Council of Elrond" }),
+	).toBeVisible();
+	// Unresolved reference (no matching character) renders as <code>
+	await expect(window.locator("code", { hasText: "Elrond" })).toBeVisible();
+	// Alias resolves to Gandalf and displays the alias text
+	await expect(window.getByText("the Grey Pilgrim")).toBeVisible();
+	await expect(
+		window.locator("code", { hasText: "the Grey Pilgrim" }),
+	).toHaveCount(0);
+	// Disambiguation resolves "Aragorn II" to a single character
+	await expect(
+		window.getByText("Aragorn II pledges his sword to the quest"),
+	).toBeVisible();
+	await expect(window.locator("code", { hasText: "Aragorn II" })).toHaveCount(
+		0,
+	);
+	// Ambiguous reference renders as <code> with a tooltip of all candidates
+	const ambiguousReference = window.locator("code", { hasText: "Aragorn" });
+	await expect(ambiguousReference).toBeVisible();
+	await expect(ambiguousReference).toHaveAttribute(
+		"title",
+		"Aragorn II, Aragorn I",
+	);
+	await window.getByRole("button", { name: "Next event" }).click();
+
+	await expect(
 		window.getByRole("heading", {
 			name: "Frodo remembers Boromir's sacrifice",
 		}),
 	).toBeVisible();
+	// Custom display text replaces the target text in the rendered output
+	await expect(
+		window.getByText(
+			"Frodo reflects on the sacrifice of the son of Denethor while continuing his journey toward Mordor.",
+		),
+	).toBeVisible();
+	await expect(window.locator("code", { hasText: "Boromir" })).toHaveCount(0);
 	await expect(
 		window.getByRole("button", { name: "Next event" }),
 	).toBeDisabled();

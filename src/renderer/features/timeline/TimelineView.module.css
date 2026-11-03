@@ -108,3 +108,13 @@
 		color: var(--accent-hover);
 	}
 }
+
+.unresolvedRef,
+.ambiguousRef {
+	background: var(--muted-bg);
+	color: var(--muted);
+	font-family: var(--font-mono);
+	font-size: inherit;
+	padding: 0 2px;
+	border-radius: 3px;
+}

@@ -39,6 +39,7 @@ import {
 	primaryKey,
 	unique,
 	index,
+	uniqueIndex,
 	check,
 } from "drizzle-orm/sqlite-core";
 import { randomUUID } from "node:crypto";
@@ -176,6 +177,19 @@ export const characters = sqliteTable(
 		/** Main portrait, should be spoiler-free. */
 		imagePath: text("image_path"),
 
+		/**
+		 * Disambiguation handle for characters with duplicate names (e.g.
+		 * "the Conqueror" for Aegon). Stored without parentheses -- the UI
+		 * wraps it when displaying "Aegon (the Conqueror)". Shown in
+		 * reader-facing contexts (timeline, ambiguous ref tooltips) as a
+		 * navigational aid, never spoiler-gated, and not merged with aliases.
+		 *
+		 * Constraints (enforced at the app layer):
+		 * - Must be null (no disambiguation) or a non-blank string.
+		 * - Must not contain "[[", "]]", or "|".
+		 */
+		disambiguation: text("disambiguation"),
+
 		createdAt: integer("created_at", { mode: "timestamp" })
 			.notNull()
 			.default(sql`(unixepoch())`),
@@ -187,6 +201,15 @@ export const characters = sqliteTable(
 	(table) => [
 		index("idx_characters_name").on(table.name),
 		check("characters_sort_order_check", sql`${table.sortOrder} >= 0`),
+		// Partial unique index: only enforces uniqueness when disambiguation
+		// is non-empty, so characters with the same name but no
+		// disambiguation can coexist.
+		uniqueIndex("idx_characters_name_disambiguation_unique")
+			.on(
+				sql`${table.name} COLLATE NOCASE`,
+				sql`${table.disambiguation} COLLATE NOCASE`,
+			)
+			.where(sql`${table.disambiguation} IS NOT NULL`),
 	],
 );
 
