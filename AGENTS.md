@@ -19,47 +19,15 @@ Before considering a task done, run `npm run format:fix`, `npm run lint`, `npm r
 
 Electron, SolidJS, Vite, TypeScript, Drizzle ORM on better-sqlite3, Kobalte for UI primitives, lucide-solid for icons, Playwright for tests.
 
-Solid components do not re-run. Do not destructure props, and read signals by calling them (`count()`), or reactivity breaks.
-
-Shared state lives in `src/renderer/shared/projectStore.ts`: `createResource` for async data fetched via `window.api`, `createMemo` for derived values, `createSignal` for local state. Feature stores (e.g. `editorStore`) use `createStore` from Solid. Components use `type Component` from `solid-js` rather than typed function props.
+For SolidJS conventions (reactivity, state management, component types), see [Application Architecture](docs/architecture/application.md).
 
 UI primitives are wrapped Kobalte components; reuse the existing wrappers.
 
 ## Architecture
 
-```
-src/shared/ipc.ts             IPC contract (IpcApi type, row types, DTOs) — source of truth for main/renderer boundary
-src/main/main.ts              Electron main entry: registers handlers via registerIpcHandlers()
-src/main/registerHandlers.ts  dynamic ipcMain.handle() dispatcher (namespace:method convention)
-src/main/handlers/*.ts        one handler file per IpcApi namespace
-src/main/db.ts                single SQLite connection per project; applies drizzle migrations at runtime
-src/preload/preload.ts        exposes window.api matching IpcApi exactly
-src/renderer/                 SolidJS UI
-src/renderer/features/        feature modules (editor, timeline, welcome, settings)
-src/renderer/shared/          shared components and stores
-src/renderer/theme/           theming
-src/db/schema.ts              Drizzle schema (source of truth for table shapes)
-```
+Charantula uses an Electron main/preload/renderer architecture. The main process owns database access and application-level operations; the renderer handles the UI and application state. Communication between processes happens exclusively through the typed preload API (`window.api`).
 
-- The renderer never touches the database. All data access goes through `window.api`.
-- Each Project is one SQLite file (`*.charantula`) stored in the project directory.
-
-### Adding or changing an IPC method
-
-1. Update the `IpcApi` type in `src/shared/ipc.ts` first (this drives types everywhere).
-2. Implement the handler(s) in `src/main/handlers/<namespace>.ts`.
-3. Register them in `src/main/main.ts` by passing the handler object to `registerIpcHandlers()`.
-4. Expose it in `src/preload/preload.ts` (add the method to the `api` object).
-5. Call it from the renderer via `window.api.<namespace>.<method>(...)`.
-
-Row types in `src/shared/ipc.ts` are derived from the Drizzle schema with `InferSelectModel` / `InferInsertModel`. Do not hand-write row types. Only DTOs and the `IpcApi` surface are hand-written.
-
-DTO conventions:
-
-- `id`, `createdAt`, `updatedAt` are server-generated and never appear in a DTO.
-- `sortOrder` is optional on create. When omitted, the handler appends at the end (max + 1).
-- Update DTOs are `Partial` (patch semantics) and exclude `sortOrder` and parent keys. Reordering and moving have dedicated methods.
-- Reordering is one batch call applied in a single transaction.
+See [Application Architecture](docs/architecture/application.md) for details on process boundaries, IPC, renderer organization, state management, and project lifecycle.
 
 ## Domain model
 
@@ -82,20 +50,11 @@ Hierarchy: Project > Collection > Chapter > Event.
 - Foreign keys declare an explicit `onDelete` (`cascade`, or `set null` for the `introducedInChapterId` columns).
 - `metadata` table is a special single-row table (integer PK = 1, CHECK enforces it).
 - **Schema changes:** Edit `src/db/schema.ts`, then run `npm run db:generate -- --name <meaningful_name>` to generate a new migration. Never manually edit generated migrations or modify existing migrations; use a new migration for every schema change.
-- **Runtime:** `src/main/db.ts` automatically applies pending migrations from `./drizzle/` in development and the bundled `drizzle/` directory in production.
-- SQLite WAL mode is enabled; foreign keys are enforced (`PRAGMA foreign_keys = ON`).
 
 ## Code style
 
-Enforced by tooling:
-
-- Use braces for all `if`/`else` statements and loops.
-- Use `@/` imports, never parent-relative imports.
-- Use `Array<T>`, not `T[]`; use `type`, not `interface` (except in `.d.ts` files).
-- No enums, namespaces, or constructor parameter properties (`erasableSyntaxOnly`).
-- Respect `exactOptionalPropertyTypes`; omit absent optional keys or explicitly allow `undefined`.
+- Use `@/` imports for everything. The only exception are CSS modules in the same directory (e.g. `import styles from "./EditPage.module.css";`).
 - Remove unused locals/parameters; prefix intentionally unused parameters with `_`.
-- Follow `prettier.config.ts` for tabs, import ordering, and formatting. Run `npm run format:fix`.
 
 Follow surrounding code conventions, including section-divider comments. Add explanatory comments only when they clarify non-obvious decisions, constraints, or intent that cannot be readily understood from the code itself. Don't add comments that merely restate what the code does.
 
