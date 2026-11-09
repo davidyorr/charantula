@@ -7,7 +7,7 @@ import {
 	type ParentComponent,
 } from "solid-js";
 
-export type Theme = "light" | "dark";
+import type { Theme } from "@/shared/ipc";
 
 type ThemeContextValue = {
 	theme: Accessor<Theme>;
@@ -16,33 +16,31 @@ type ThemeContextValue = {
 
 const ThemeContext = createContext<ThemeContextValue>();
 
-const STORAGE_KEY = "charantula.theme";
-
-const getInitialTheme = (): Theme => {
-	if (typeof window === "undefined") {
-		return "dark";
-	}
-
-	const savedTheme = window.localStorage.getItem(STORAGE_KEY);
-	if (savedTheme === "light" || savedTheme === "dark") {
-		return savedTheme;
-	}
-
-	return window.matchMedia("(prefers-color-scheme: dark)").matches
-		? "dark"
-		: "light";
-};
+// A null theme in the store means "follow the OS", which the main process
+// deliberately leaves unresolved so the preference stays live.
+const systemTheme = (): Theme =>
+	window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 
 export const ThemeProvider: ParentComponent = (props) => {
-	const [theme, setTheme] = createSignal<Theme>(getInitialTheme());
+	const [theme, setThemeSignal] = createSignal<Theme>(
+		window.api.settings.initial.theme ?? systemTheme(),
+	);
 
 	createEffect(() => {
 		const currentTheme = theme();
 
 		document.documentElement.dataset.theme = currentTheme;
 		document.documentElement.style.colorScheme = currentTheme;
-		window.localStorage.setItem(STORAGE_KEY, currentTheme);
 	});
+
+	// Persisting here rather than in the effect above means a plain launch does
+	// not rewrite settings.json. Fire-and-forget: the choice is already on screen.
+	const setTheme = (next: Theme) => {
+		setThemeSignal(next);
+		void window.api.settings
+			.update({ theme: next })
+			.catch((err: unknown) => console.warn("Failed to save theme:", err));
+	};
 
 	const value: ThemeContextValue = {
 		theme,

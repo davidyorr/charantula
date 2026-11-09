@@ -153,7 +153,7 @@ In particular, `introducedInChapterId` uses `set null` so deleting an introducti
 
 ### Metadata
 
-The `metadata` table is a special single-row table (integer PK = 1, CHECK enforced) that stores project-level settings.
+The `metadata` table is a special single-row table (integer PK = 1, CHECK enforced) that stores settings for this project only. Application-level settings, such as the theme, are deliberately not stored here: they belong to `userData/settings.json`, which `src/main/settings.ts` owns. See [Application Architecture](application.md).
 
 ## Migrations
 

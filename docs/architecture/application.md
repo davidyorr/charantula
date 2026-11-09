@@ -23,8 +23,11 @@ Responsibilities include:
 - Managing the Electron application lifecycle.
 - Opening and managing project databases.
 - Performing database queries and mutations.
+- Storing global application settings.
 - Accessing the filesystem.
 - Registering and executing IPC handlers.
+
+Global settings are app-level preferences rather than story data, so they live in `settings.json` under Electron's `userData` path instead of in a project database, which also makes them readable with no project open. `src/main/settings.ts` owns that file; `src/main/recentProjects.ts` follows the same pattern for recent projects.
 
 Database access is restricted to the main process. The renderer must never import or use Drizzle ORM or better-sqlite3.
 
@@ -92,9 +95,11 @@ Row types should be derived from the Drizzle schema rather than maintained indep
 
 IPC methods are organized by namespace, with one handler file per namespace in `src/main/handlers/`.
 
-The main process registers handler objects through `registerIpcHandlers()` in `src/main/registerHandlers.ts`.
+The main process registers handler objects through `registerIpcHandlers()` in `src/main/registerHandlers.ts`. Only callable contract members are registered; a namespace may also carry plain values that preload supplies itself, such as `settings.initial` and `platform.pathSeparator`.
 
 The preload script exposes corresponding methods through `window.api`.
+
+All IPC is asynchronous `invoke` / `handle` apart from one boot channel: `settings:boot` answers a single synchronous read from preload so the renderer can apply the stored theme on its first frame. `registerSettingsBoot()` registers it, and must run before the window is created.
 
 This keeps the IPC contract, handler implementations, and renderer-facing API organized around the same namespaces.
 
@@ -119,6 +124,8 @@ Feature modules should own functionality specific to their domain. Functionality
 ### State Management
 
 Shared application state lives in `src/renderer/shared/projectStore.ts`.
+
+Global settings are the exception: the main process owns the value, and `src/renderer/theme/ThemeProvider.tsx` holds the reactive theme derived from it, seeded from `window.api.settings.initial` at boot and written back when the user changes it.
 
 Feature-specific state can live in feature stores. For example, the editor uses `editorStore`.
 

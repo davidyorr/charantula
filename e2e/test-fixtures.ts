@@ -10,6 +10,8 @@ import fs from "fs";
 import os from "os";
 import path from "path";
 
+import type { Theme } from "@/shared/ipc";
+
 export { expect };
 
 const mainProcessPath = path.join(import.meta.dirname, "../dist/main/main.js");
@@ -339,6 +341,25 @@ export async function goToTimeline(
 }
 
 // ---------------------------------------------------------------------------
+// Settings seeding
+// ---------------------------------------------------------------------------
+
+/**
+ * Writes the app-level settings file into a user-data dir before launch, so the
+ * stored theme is already in force on the app's first paint (the main process
+ * reads this file synchronously at boot). Always called with the test's own
+ * temp dir, so a test run can never touch the developer's settings.
+ */
+function writeSettings(userDataDir: string, settings: { theme: Theme }): void {
+	fs.mkdirSync(userDataDir, { recursive: true });
+	fs.writeFileSync(
+		path.join(userDataDir, "settings.json"),
+		JSON.stringify(settings, null, 2),
+		"utf-8",
+	);
+}
+
+// ---------------------------------------------------------------------------
 // Fixtures
 // ---------------------------------------------------------------------------
 
@@ -348,9 +369,10 @@ type Fixtures = {
 	/** A unique temp directory per test, removed afterwards. */
 	tempDir: string;
 	/**
-	 * Launches the app against this test's isolated user-data dir. Call it
-	 * again after closing the first instance to simulate a restart; the profile
-	 * (and any localStorage) carries over, just like a real restart.
+	 * Launches the app against this test's isolated user-data dir, seeded with a
+	 * dark theme. Call it again after closing the first instance to simulate a
+	 * restart; the profile (settings, recent projects) carries over, just like a
+	 * real restart.
 	 */
 	launchApp: () => Promise<LaunchedApp>;
 	/** The default running app instance. */
@@ -375,6 +397,7 @@ export const test = base.extend<Fixtures>({
 
 	launchApp: async ({ tempDir }, use) => {
 		const userDataDir = path.join(tempDir, "user-data");
+		writeSettings(userDataDir, { theme: "dark" });
 		const launched: Array<ElectronApplication> = [];
 
 		await use(async () => {
@@ -384,9 +407,6 @@ export const test = base.extend<Fixtures>({
 			launched.push(app);
 
 			const window = await app.firstWindow();
-			await window.evaluate(() => {
-				localStorage.setItem("charantula.theme", "dark");
-			});
 
 			return { app, window };
 		});

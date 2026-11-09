@@ -2,9 +2,15 @@ import { RadioGroup } from "@kobalte/core/radio-group";
 import type { Component } from "solid-js";
 
 import { useTheme } from "@/renderer/theme/ThemeProvider";
+import { isTheme, THEMES, type Theme } from "@/shared/ipc";
 
 import styles from "./AppearanceSettings.module.css";
 import shared from "./fields.module.css";
+
+const THEME_LABELS: Record<Theme, string> = {
+	light: "Light",
+	dark: "Dark",
+};
 
 export const AppearanceSettings: Component = () => {
 	const { theme, setTheme } = useTheme();
@@ -14,29 +20,23 @@ export const AppearanceSettings: Component = () => {
 			<span class={shared.label}>Theme</span>
 			<RadioGroup
 				value={theme()}
-				onChange={(v: string | null) => {
-					if (v === "light" || v === "dark") {
+				onChange={(v) => {
+					if (isTheme(v)) {
 						setTheme(v);
 					}
 				}}
 				class={styles.radioGroup}
 			>
-				<RadioGroup.Item
-					value="light"
-					class={styles.radioItem}
-					onClick={() => setTheme("light")}
-				>
-					<RadioGroup.ItemControl class={styles.radioInput} />
-					<span class={styles.radioLabel}>Light</span>
-				</RadioGroup.Item>
-				<RadioGroup.Item
-					value="dark"
-					class={styles.radioItem}
-					onClick={() => setTheme("dark")}
-				>
-					<RadioGroup.ItemControl class={styles.radioInput} />
-					<span class={styles.radioLabel}>Dark</span>
-				</RadioGroup.Item>
+				{THEMES.map((t) => (
+					<RadioGroup.Item
+						value={t}
+						class={styles.radioItem}
+						onClick={() => setTheme(t)}
+					>
+						<RadioGroup.ItemControl class={styles.radioInput} />
+						<span class={styles.radioLabel}>{THEME_LABELS[t]}</span>
+					</RadioGroup.Item>
+				))}
 			</RadioGroup>
 		</div>
 	);

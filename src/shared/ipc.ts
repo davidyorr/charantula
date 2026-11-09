@@ -197,6 +197,34 @@ export type RecentProject = {
 };
 
 // -----------------------------------------------------------------------------
+// App settings (global -- userData/settings.json, not the project DB)
+// -----------------------------------------------------------------------------
+
+// Single source of truth: the Theme union is derived from this list so the type
+// and the runtime guard can't drift apart.
+export const THEMES = ["light", "dark"] as const;
+export type Theme = (typeof THEMES)[number];
+
+export const isTheme = (v: unknown): v is Theme =>
+	(THEMES as ReadonlyArray<unknown>).includes(v);
+
+export type Settings = {
+	/** Null means "follow the OS preference", which the renderer resolves live. */
+	theme: Theme | null;
+};
+
+export type UpdateSettingsInput = Partial<Settings>;
+
+/**
+ * The RPC half of the settings namespace. `IpcApi["settings"]` adds `initial`,
+ * which is a boot value supplied by preload rather than an ipcMain handler.
+ */
+export type SettingsHandlers = {
+	get: () => Promise<Settings>;
+	update: (patch: UpdateSettingsInput) => Promise<Settings>;
+};
+
+// -----------------------------------------------------------------------------
 // The contract itself
 // -----------------------------------------------------------------------------
 
@@ -403,6 +431,21 @@ export type IpcApi = {
 		 * the file no longer exists on disk.
 		 */
 		getDataUrl: (imagePath: string) => Promise<string | null>;
+	};
+
+	// ---- Settings ----
+	// -------------------------------------------------------------------------
+	// Global app preferences, stored by the main process as settings.json in
+	// app.getPath("userData") (src/main/settings.ts). They are deliberately not
+	// in the project DB: a preference is not story data, so it must survive
+	// switching projects and stay out of the portable project folder.
+	//
+	// `initial` is the same value get() returns, but captured synchronously by
+	// preload over the "settings:boot" channel, so the renderer can pick the
+	// right theme for its very first frame. Only that boot read is sync.
+	// -------------------------------------------------------------------------
+	settings: SettingsHandlers & {
+		initial: Settings;
 	};
 
 	// ---- Platform ----

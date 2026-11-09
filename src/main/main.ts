@@ -13,12 +13,16 @@ import { eventsHandlers } from "./handlers/events";
 import { imagesHandlers } from "./handlers/images";
 import { metadataHandlers } from "./handlers/metadata";
 import { projectHandlers } from "./handlers/project";
+import { registerSettingsBoot, settingsHandlers } from "./handlers/settings";
 import { tagsHandlers } from "./handlers/tags";
 import { registerIpcHandlers } from "./registerHandlers";
 
 console.log("Hello from Electron 👋");
 
 app.whenReady().then(() => {
+	// Must precede the BrowserWindow: preload reads this synchronously at startup
+	registerSettingsBoot();
+
 	registerIpcHandlers({
 		project: projectHandlers,
 		metadata: metadataHandlers,
@@ -32,6 +36,7 @@ app.whenReady().then(() => {
 		eventCharacters: eventCharactersHandlers,
 		eventTags: eventTagsHandlers,
 		images: imagesHandlers,
+		settings: settingsHandlers,
 	});
 
 	const showWindow =

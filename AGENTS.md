@@ -29,6 +29,15 @@ Charantula uses an Electron main/preload/renderer architecture. The main process
 
 See [Application Architecture](docs/architecture/application.md) for details on process boundaries, IPC, renderer organization, state management, and project lifecycle.
 
+## Global settings
+
+App-wide preferences live in `userData/settings.json`, owned by `src/main/settings.ts` -- never in the project DB, because a preference is not story data and has to be readable with no project open.
+
+- The shape is `Settings` in `src/shared/ipc.ts`. The main process owns the defaults and validates every value on both read and write, since the file is hand-editable.
+- A `null` setting means "follow the system", and the renderer resolves it. Keep main from resolving it, or the OS choice gets frozen into the file.
+- `settings:boot` is the only synchronous IPC channel: preload reads the stored value once so the renderer can apply it on its first frame. Everything else stays async `invoke`.
+- To add a setting: extend `Settings` / `UpdateSettingsInput` in `src/shared/ipc.ts`, give it a default and validation in `src/main/settings.ts`, then add its control to a page in `src/renderer/features/settings/`.
+
 ## Domain model
 
 Hierarchy: Project > Collection > Chapter > Event.

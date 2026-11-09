@@ -1,6 +1,11 @@
 import { contextBridge, ipcRenderer } from "electron";
 
-import type { IpcApi } from "@/shared/ipc";
+import type { IpcApi, Settings } from "@/shared/ipc";
+
+// The one sync call in this file: preload runs before any renderer code, so the
+// stored theme is known on the first frame. Everything else stays async.
+const bootSettings = ipcRenderer.sendSync("settings:boot") as Settings | null;
+const initialSettings: Settings = { theme: bootSettings?.theme ?? null };
 
 const api: IpcApi = {
 	// ---- Project ----
@@ -127,6 +132,13 @@ const api: IpcApi = {
 		pickFile: () => ipcRenderer.invoke("images:pickFile"),
 		getDataUrl: (imagePath) =>
 			ipcRenderer.invoke("images:getDataUrl", imagePath),
+	},
+
+	// ---- Settings ----
+	settings: {
+		initial: initialSettings,
+		get: () => ipcRenderer.invoke("settings:get"),
+		update: (patch) => ipcRenderer.invoke("settings:update", patch),
 	},
 
 	// ---- Platform ----
