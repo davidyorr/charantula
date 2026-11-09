@@ -56,6 +56,10 @@ type CreateFrom<TInsert, TOmit extends keyof TInsert> = Omit<
 	TOmit | "sortOrder"
 > & { sortOrder?: number };
 
+export type UpdateMetadataInput = Partial<
+	Pick<Metadata, "projectName" | "projectDescription">
+>;
+
 export type CreateCollectionInput = CreateFrom<
 	InferInsertModel<typeof collections>,
 	"id" | "createdAt" | "updatedAt"
@@ -213,9 +217,7 @@ export type IpcApi = {
 
 	metadata: {
 		get: () => Promise<Metadata>;
-		update: (
-			patch: Partial<Pick<Metadata, "projectName" | "projectDescription">>,
-		) => Promise<Metadata>;
+		update: (patch: UpdateMetadataInput) => Promise<Metadata>;
 	};
 
 	collections: {

@@ -1,9 +1,31 @@
 import { Dialog } from "@kobalte/core/dialog";
-import { createEffect, createSignal, type Component } from "solid-js";
+import { X } from "lucide-solid";
+import {
+	createEffect,
+	createSignal,
+	For,
+	Show,
+	type Component,
+} from "solid-js";
 
-import { project } from "@/renderer/shared/projectStore";
+import { IconButton } from "@/renderer/shared/IconButton";
 
+import { AppearanceSettings } from "./AppearanceSettings";
+import { ProjectSettings } from "./ProjectSettings";
 import styles from "./SettingsModal.module.css";
+
+type Section = {
+	id: string;
+	label: string;
+	Component: Component;
+};
+
+const SECTIONS: Array<Section> = [
+	{ id: "project", label: "Project", Component: ProjectSettings },
+	{ id: "appearance", label: "Appearance", Component: AppearanceSettings },
+];
+
+const FIRST_SECTION_ID = SECTIONS[0].id;
 
 type Props = {
 	open: boolean;
@@ -11,45 +33,16 @@ type Props = {
 };
 
 export const SettingsModal: Component<Props> = (props) => {
-	const [name, setName] = createSignal("");
-	const [description, setDescription] = createSignal("");
-	const [saving, setSaving] = createSignal(false);
-	const [error, setError] = createSignal<string | null>(null);
+	const [activeId, setActiveId] = createSignal(FIRST_SECTION_ID);
+	const activeLabel = () =>
+		SECTIONS.find((section) => section.id === activeId())?.label;
 
-	// re-sync the form fields from the store every time the modal opens
+	// always land on the first section each time the modal opens
 	createEffect(() => {
 		if (props.open) {
-			const current = project.metadata.get();
-			setName(current?.projectName ?? "");
-			setDescription(current?.projectDescription ?? "");
-			setError(null);
+			setActiveId(FIRST_SECTION_ID);
 		}
 	});
-
-	const handleSubmit = async (e: SubmitEvent) => {
-		e.preventDefault();
-
-		const trimmedName = name().trim();
-		if (trimmedName === "") {
-			setError("Project name can't be empty.");
-			return;
-		}
-
-		setSaving(true);
-		setError(null);
-
-		try {
-			await project.metadata.update({
-				projectName: trimmedName,
-				projectDescription: description().trim() || null,
-			});
-			props.onOpenChange(false);
-		} catch (err) {
-			setError(err instanceof Error ? err.message : "Failed to save settings.");
-		} finally {
-			setSaving(false);
-		}
-	};
 
 	return (
 		<Dialog open={props.open} onOpenChange={props.onOpenChange}>
@@ -57,56 +50,45 @@ export const SettingsModal: Component<Props> = (props) => {
 				<Dialog.Overlay class={styles.overlay} />
 
 				<Dialog.Content class={styles.content}>
-					<Dialog.Title class={styles.title}>Project Settings</Dialog.Title>
+					<header class={styles.header}>
+						<Dialog.Title class={styles.title}>{activeLabel()}</Dialog.Title>
+						<IconButton
+							label="Close settings"
+							onClick={() => props.onOpenChange(false)}
+						>
+							<X size={18} />
+						</IconButton>
+					</header>
 
-					<form class={styles.form} onSubmit={handleSubmit}>
-						<div class={styles.field}>
-							<label class={styles.label} for="project-name">
-								Name
-							</label>
-							<input
-								id="project-name"
-								class={styles.input}
-								type="text"
-								value={name()}
-								onInput={(e) => setName(e.currentTarget.value)}
-								autofocus
-								required
-							/>
+					<div class={styles.layout}>
+						<nav class={styles.nav}>
+							<For each={SECTIONS}>
+								{(section) => (
+									<button
+										type="button"
+										class={styles.navItem}
+										classList={{
+											[styles.navItemActive]: activeId() === section.id,
+										}}
+										aria-current={activeId() === section.id ? "true" : "false"}
+										onClick={() => setActiveId(section.id)}
+									>
+										{section.label}
+									</button>
+								)}
+							</For>
+						</nav>
+
+						<div class={styles.panel}>
+							<For each={SECTIONS}>
+								{(section) => (
+									<Show when={activeId() === section.id}>
+										<section.Component />
+									</Show>
+								)}
+							</For>
 						</div>
-
-						<div class={styles.field}>
-							<label class={styles.label} for="project-description">
-								Description
-							</label>
-							<textarea
-								id="project-description"
-								class={styles.textarea}
-								rows={4}
-								value={description()}
-								onInput={(e) => setDescription(e.currentTarget.value)}
-							/>
-						</div>
-
-						{error() && <p class={styles.error}>{error()}</p>}
-
-						<div class={styles.actions}>
-							<Dialog.CloseButton
-								class={styles.cancelButton}
-								type="button"
-								disabled={saving()}
-							>
-								Cancel
-							</Dialog.CloseButton>
-							<button
-								class={styles.saveButton}
-								type="submit"
-								disabled={saving()}
-							>
-								{saving() ? "Saving…" : "Save"}
-							</button>
-						</div>
-					</form>
+					</div>
 				</Dialog.Content>
 			</Dialog.Portal>
 		</Dialog>

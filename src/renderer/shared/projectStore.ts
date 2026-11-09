@@ -5,8 +5,8 @@ import type {
 	Character,
 	Collection,
 	Event,
-	Metadata,
 	ProjectOpenResult,
+	UpdateMetadataInput,
 } from "@/shared/ipc";
 
 const [current, setCurrent] = createSignal<ProjectOpenResult | null>(null);
@@ -19,9 +19,7 @@ const [metadataResource, { mutate: mutateMetadata }] = createResource(
 export const metadata = {
 	resource: metadataResource,
 	get: () => metadataResource(),
-	update: async (
-		patch: Partial<Pick<Metadata, "projectName" | "projectDescription">>,
-	) => {
+	update: async (patch: UpdateMetadataInput) => {
 		const updated = await window.api.metadata.update(patch);
 		mutateMetadata(updated);
 		return updated;
