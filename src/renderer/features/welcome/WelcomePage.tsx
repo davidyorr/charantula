@@ -1,9 +1,10 @@
 import { useNavigate } from "@solidjs/router";
 import { createSignal, Match, onMount, Switch, type Component } from "solid-js";
 
-import { CreateProject } from "@/renderer/features/welcome/CreateProject";
 import { Button } from "@/renderer/shared/Button";
 import { project } from "@/renderer/shared/projectStore";
+
+import { CreateProject } from "./CreateProject";
 
 import styles from "./WelcomePage.module.css";
 

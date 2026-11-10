@@ -1,10 +1,10 @@
 import { Match, Show, Switch, type Component } from "solid-js";
 
-import { ChapterEditor } from "@/renderer/features/editor/ChapterEditor";
-import { CharacterEditor } from "@/renderer/features/editor/CharacterEditor";
-import { CollectionEditor } from "@/renderer/features/editor/CollectionEditor";
-import { EventEditor } from "@/renderer/features/editor/EventEditor";
-import { editorStore } from "@/renderer/features/editor/store";
+import { ChapterEditor } from "./ChapterEditor";
+import { CharacterEditor } from "./CharacterEditor";
+import { CollectionEditor } from "./CollectionEditor";
+import { EventEditor } from "./EventEditor";
+import { editorStore } from "./store";
 
 import styles from "./EditorPanel.module.css";
 

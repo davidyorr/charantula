@@ -1,5 +1,6 @@
-import { project } from "@/renderer/shared/projectStore";
 import type { ContentNode } from "@/shared/ipc";
+
+import { project } from "./projectStore";
 
 /**
  * Reads an Event's stored `contentJson`. Malformed JSON yields no nodes rather

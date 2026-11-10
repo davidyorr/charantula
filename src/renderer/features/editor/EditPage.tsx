@@ -2,10 +2,11 @@ import { useNavigate, useParams } from "@solidjs/router";
 import { Timeline } from "lucide-solid";
 import { createSignal, type Component } from "solid-js";
 
-import { EditorPanel } from "@/renderer/features/editor/EditorPanel";
-import { Sidebar } from "@/renderer/features/editor/Sidebar";
 import { SettingsModal } from "@/renderer/features/settings/SettingsModal";
 import { NavigationButton } from "@/renderer/shared/NavigationButton";
+
+import { EditorPanel } from "./EditorPanel";
+import { Sidebar } from "./Sidebar";
 
 import styles from "./EditPage.module.css";
 

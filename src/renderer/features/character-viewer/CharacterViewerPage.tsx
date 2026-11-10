@@ -1,7 +1,7 @@
 import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import { createMemo } from "solid-js";
 
-import { CharacterViewer } from "@/renderer/features/character-viewer/CharacterViewer";
+import { CharacterViewer } from "./CharacterViewer";
 
 type SearchParams = {
 	back?: string;

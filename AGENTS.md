@@ -60,7 +60,7 @@ Hierarchy: Project > Collection > Chapter > Event, with Characters and Tags scop
 
 ## Code style
 
-- Use `@/` imports for everything. The only exception are CSS modules in the same directory (e.g. `import styles from "./EditPage.module.css";`).
+- Prefer `./` imports for files in the same directory; use `@/` imports for anything further away.
 - Remove unused locals/parameters; prefix intentionally unused parameters with `_`.
 
 Follow surrounding code conventions, including section-divider comments. Add explanatory comments only when they clarify non-obvious decisions, constraints, or intent that cannot be readily understood from the code itself. Don't add comments that merely restate what the code does.

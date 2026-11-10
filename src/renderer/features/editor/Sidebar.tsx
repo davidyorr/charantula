@@ -1,7 +1,6 @@
 import { Plus, Settings, Trash2 } from "lucide-solid";
 import { createEffect, For, Show, type Component } from "solid-js";
 
-import { editorStore } from "@/renderer/features/editor/store";
 import { Collapsible } from "@/renderer/shared/Collapsible";
 import { ContextMenu } from "@/renderer/shared/ContextMenu";
 import { IconButton } from "@/renderer/shared/IconButton";
@@ -10,6 +9,8 @@ import { project } from "@/renderer/shared/projectStore";
 import type { Chapter, Character, Collection, Event } from "@/shared/ipc";
 
 import { DragWrapper } from "./DragWrapper";
+import { editorStore } from "./store";
+
 import styles from "./Sidebar.module.css";
 
 type Props = {

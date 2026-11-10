@@ -9,13 +9,14 @@ import {
 	tags,
 } from "@/db/schema";
 import { getCurrentProjectDirectory, getDb, type DrizzleDb } from "@/main/db";
-import { nextSortOrder } from "@/main/handlers/sortOrder";
 import {
 	deleteEntityImage,
 	renameEntityImage,
 	saveEntityImage,
 } from "@/main/imageStorage";
 import type { IpcApi } from "@/shared/ipc";
+
+import { nextSortOrder } from "./sortOrder";
 
 async function getEventDetailInternal(db: DrizzleDb, id: string) {
 	const [event] = await db.select().from(events).where(eq(events.id, id));

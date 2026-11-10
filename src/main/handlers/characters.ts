@@ -11,13 +11,14 @@ import {
 	tags,
 } from "@/db/schema";
 import { getCurrentProjectDirectory, getDb, type DrizzleDb } from "@/main/db";
-import { nextSortOrder } from "@/main/handlers/sortOrder";
 import {
 	deleteEntityImage,
 	renameEntityImage,
 	saveEntityImage,
 } from "@/main/imageStorage";
 import type { IpcApi } from "@/shared/ipc";
+
+import { nextSortOrder } from "./sortOrder";
 
 async function getCharacterDetailInternal(db: DrizzleDb, id: string) {
 	const [character] = await db

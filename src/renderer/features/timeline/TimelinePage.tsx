@@ -2,10 +2,11 @@ import { useNavigate, useParams, useSearchParams } from "@solidjs/router";
 import { SquarePen } from "lucide-solid";
 import type { Component } from "solid-js";
 
-import { ChapterPicker } from "@/renderer/features/timeline/ChapterPicker";
-import { CharacterPicker } from "@/renderer/features/timeline/CharacterPicker";
-import { TimelineView } from "@/renderer/features/timeline/TimelineView";
 import { NavigationButton } from "@/renderer/shared/NavigationButton";
+
+import { ChapterPicker } from "./ChapterPicker";
+import { CharacterPicker } from "./CharacterPicker";
+import { TimelineView } from "./TimelineView";
 
 import styles from "./TimelinePage.module.css";
 

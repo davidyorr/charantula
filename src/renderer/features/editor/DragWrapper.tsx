@@ -2,7 +2,6 @@ import { Show, type Component, type JSX } from "solid-js";
 
 import { project } from "@/renderer/shared/projectStore";
 
-import styles from "./DragWrapper.module.css";
 import {
 	dragItem,
 	setDragItem,
@@ -11,6 +10,8 @@ import {
 	clearDrag,
 	type DragKind,
 } from "./dragState";
+
+import styles from "./DragWrapper.module.css";
 
 const handleDragStart = (
 	e: DragEvent,

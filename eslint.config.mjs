@@ -18,9 +18,9 @@ export default defineConfig([
 				{
 					patterns: [
 						{
-							group: ["../*"],
+							regex: "(^|/)\\.\\.(/|$)",
 							message:
-								"Use project aliases instead of parent relative imports.",
+								"Don't use parent relative imports (`../`). Use `@/` imports instead.",
 						},
 					],
 				},

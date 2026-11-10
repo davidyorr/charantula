@@ -12,6 +12,7 @@ import { IconButton } from "@/renderer/shared/IconButton";
 
 import { AppearanceSettings } from "./AppearanceSettings";
 import { ProjectSettings } from "./ProjectSettings";
+
 import styles from "./SettingsModal.module.css";
 
 type Section = {

@@ -2,13 +2,14 @@ import { and, eq } from "drizzle-orm";
 
 import { chapters, events } from "@/db/schema";
 import { getCurrentProjectDirectory, getDb } from "@/main/db";
-import { nextSortOrder } from "@/main/handlers/sortOrder";
 import {
 	deleteEntityImage,
 	renameEntityImage,
 	saveEntityImage,
 } from "@/main/imageStorage";
 import type { IpcApi } from "@/shared/ipc";
+
+import { nextSortOrder } from "./sortOrder";
 
 export const chaptersHandlers: IpcApi["chapters"] = {
 	async listByCollection(collectionId) {

@@ -2,7 +2,7 @@ import { Collapsible as KCollapsible } from "@kobalte/core/collapsible";
 import { ChevronRight } from "lucide-solid";
 import { Show, splitProps, type Component, type JSX } from "solid-js";
 
-import { TreeNode } from "@/renderer/shared/TreeNode";
+import { TreeNode } from "./TreeNode";
 
 import styles from "./Collapsible.module.css";
 
