@@ -27,7 +27,9 @@ Responsibilities include:
 - Accessing the filesystem.
 - Registering and executing IPC handlers.
 
-Global settings are app-level preferences rather than story data, so they live in `settings.json` under Electron's `userData` path instead of in a project database, which also makes them readable with no project open. `src/main/settings.ts` owns that file; `src/main/recentProjects.ts` follows the same pattern for recent projects.
+Global settings are app-level preferences rather than story data, so they live in `settings.json` under Electron's `userData` path instead of in a project database, which also makes them readable with no project open. `src/main/settings.ts` owns that file: it holds the defaults and validates every value on both read and write, since the file is hand-editable. `src/main/recentProjects.ts` follows the same pattern for recent projects.
+
+A `null` setting means "follow the system" and is resolved only by the renderer. If the main process resolved it, the operating system's choice at that moment would be frozen into the file.
 
 Database access is restricted to the main process. The renderer must never import or use Drizzle ORM or better-sqlite3.
 
@@ -125,7 +127,7 @@ Feature modules should own functionality specific to their domain. Functionality
 
 Shared application state lives in `src/renderer/shared/projectStore.ts`.
 
-Global settings are the exception: the main process owns the value, and `src/renderer/theme/ThemeProvider.tsx` holds the reactive theme derived from it, seeded from `window.api.settings.initial` at boot and written back when the user changes it.
+Global settings are the exception: the main process owns the value (see Main Process), and `src/renderer/theme/ThemeProvider.tsx` holds the reactive theme derived from it, seeded from `window.api.settings.initial` and written back on change.
 
 Feature-specific state can live in feature stores. For example, the editor uses `editorStore`.
 
@@ -149,17 +151,13 @@ Consequently:
 - Preserve reactive access to props and store values.
 - Use SolidJS primitives rather than introducing unnecessary manual synchronization.
 
-See [AGENTS.md](../AGENTS.md) for additional SolidJS and code-style conventions.
+See [AGENTS.md](../AGENTS.md) for code-style conventions.
 
 ## Project and Database Lifecycle
 
-Each Charantula Project is backed by its own SQLite database file with the `.charantula` extension.
+Each Charantula Project is backed by its own SQLite database file, and the main process owns the connection to the currently opened one. The renderer never manages connections or databases; it interacts with the opened project through the shared project store and the IPC API.
 
-The main process manages the database connection for the currently opened project. There is a single SQLite connection per project.
-
-When a project database is opened, `src/main/db.ts` initializes the database connection, enables SQLite WAL mode and foreign key enforcement, and applies pending Drizzle migrations.
-
-The renderer interacts with the currently opened project through the shared project store and the IPC API. It does not manage database connections directly.
+See [Database Architecture](database.md) for the file layout, SQLite configuration, and migration lifecycle.
 
 ## Key Architectural Constraints
 
@@ -171,4 +169,3 @@ The following constraints are fundamental to the application architecture:
 4. **Features should remain modular.** Feature-specific functionality belongs in its feature module; genuinely shared functionality belongs in shared directories.
 5. **State should have clear ownership.** Avoid duplicating shared application state inside individual features.
 6. **Preserve SolidJS reactivity.** Do not apply React patterns that break SolidJS's reactive model.
-7. **Projects are independent databases.** Database operations must use the connection associated with the currently opened project.

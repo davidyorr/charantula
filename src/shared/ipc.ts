@@ -2,7 +2,8 @@
 //
 // Single source of truth for the boundary between main and renderer.
 //
-// - src/main/main.ts        implements one ipcMain.handle() per method below
+// - src/main/handlers/*     one handler method per entry below; registerIpcHandlers()
+//                           registers them and derives each channel name from the keys
 // - src/preload/preload.ts  exposes window.api matching IpcApi exactly
 // - src/renderer/*          calls window.api.<namespace>.<method>(...)
 //

@@ -2,7 +2,7 @@
 
 Charantula uses SQLite for persistent storage and Drizzle ORM for schema definition and database access. Each Project is stored in its own SQLite database file (`.charantula`).
 
-The database is accessed exclusively from the Electron main process. The renderer accesses persistent data through the IPC API.
+The database is accessed exclusively from the Electron main process; see [Application Architecture](application.md) for the process boundary and the IPC API the renderer uses instead.
 
 ## Database Organization
 
@@ -48,6 +48,8 @@ Project
   +-- Tag
 ```
 
+Characters and Tags are scoped to the whole Project, not to a Collection.
+
 Each entity is documented in its own file: TBD.
 
 Events store rich-text content in `contentJson` (a JSON array of nodes) with a plain-text mirror in `contentPlain`. Both are kept in sync by the application layer.
@@ -66,11 +68,9 @@ To determine the overall story order, compare the parent ordering first, then th
 
 Never compare `sortOrder` values across different parents. For example, a Chapter's `sortOrder` cannot be compared directly with another Chapter's value unless both belong to the same Collection.
 
-All `sortOrder` columns must be nonnegative.
-
 When creating a record without an explicit `sortOrder`, the handler appends it to the end of its parent's ordering by assigning `max(sortOrder) + 1`.
 
-Reordering is performed through dedicated batch operations applied within a single database transaction.
+Reordering is performed through dedicated batch operations, which are transactional (see Transactions and Data Integrity).
 
 ## Spoiler Safety
 
@@ -92,7 +92,7 @@ Because Chapters belong to Collections, chapter progression must be evaluated us
 
 ### Gated and Ungated Data
 
-Not all information is subject to the same spoiler restrictions. Ungated fields (e.g. `synopsis`, `imagePath`) are editorially curated and always visible — they must contain only facts true from the entity's first appearance. Gated fields use `introducedInChapterId` to control visibility per-row.
+Not all information is subject to the same spoiler restrictions. Ungated fields (e.g. `synopsis`, `imagePath`) are editorially curated and always visible — they must contain only facts true from the entity's first appearance, so anything spoilery belongs on an Event instead. Gated fields use `introducedInChapterId` to control visibility per-row; character aliases and character tags are gated this way.
 
 ### `introducedInChapterId`
 
@@ -121,7 +121,7 @@ The Drizzle schema in `src/db/schema.ts` is the source of truth for database tab
 
 - Primary keys are text UUIDs.
 - UUIDs are generated using `$defaultFn(() => randomUUID())`.
-- Join tables use composite primary keys where appropriate.
+- Join tables use composite primary keys, which also prevents duplicate associations.
 
 ### Timestamps
 
@@ -149,33 +149,20 @@ In particular, `introducedInChapterId` uses `set null` so deleting an introducti
 
 - Every `sortOrder` column has a CHECK constraint enforcing `sortOrder >= 0`.
 - Foreign key enforcement is enabled in SQLite.
-- Join tables use composite primary keys to prevent duplicate associations.
 
 ### Metadata
 
-The `metadata` table is a special single-row table (integer PK = 1, CHECK enforced) that stores settings for this project only. Application-level settings, such as the theme, are deliberately not stored here: they belong to `userData/settings.json`, which `src/main/settings.ts` owns. See [Application Architecture](application.md).
+The `metadata` table is a special single-row table (integer PK = 1, CHECK enforced) that stores settings for this project only. Application-level settings, such as the theme, are deliberately not stored here; they belong to `userData/settings.json` (see [Application Architecture](application.md)).
 
 ## Migrations
 
-Database schema changes are managed through Drizzle Kit migrations.
-
-### Schema Source of Truth
-
-`src/db/schema.ts` defines the database schema.
-
-When the schema changes, generate a new migration rather than modifying existing migrations.
+Database schema changes are managed through Drizzle Kit migrations, generated from the schema described above.
 
 ### Generating Migrations
 
-Run:
+Every schema change gets its own new migration, and generated migrations are immutable once applied — never edit them. The generation command is documented in [AGENTS.md](../AGENTS.md).
 
-```bash
-npm run db:generate -- --name <meaningful-name>
-```
-
-Generated SQL migration files are stored in `./drizzle/`.
-
-Migrations are committed alongside the schema changes.
+Generated SQL migration files are stored in `./drizzle/` and committed alongside the schema change.
 
 ### Applying Migrations
 
@@ -187,8 +174,6 @@ The application uses:
 
 - The `./drizzle/` directory during development.
 - The bundled `drizzle/` directory in production.
-
-Existing migrations must remain immutable once generated and applied. Schema changes require a new migration.
 
 ## Transactions and Data Integrity
 

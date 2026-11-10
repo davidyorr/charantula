@@ -29,36 +29,34 @@ Charantula uses an Electron main/preload/renderer architecture. The main process
 
 See [Application Architecture](docs/architecture/application.md) for details on process boundaries, IPC, renderer organization, state management, and project lifecycle.
 
+### Adding or changing an IPC method
+
+1. Add the method to `IpcApi` in `src/shared/ipc.ts`, plus a `Create*` / `Update*` DTO if it accepts a record. Row types there are derived from the Drizzle schema; never hand-write them.
+2. Add the matching `ipcRenderer.invoke("<namespace>:<method>", ...)` line in `src/preload/preload.ts`.
+3. Implement it in that namespace's file in `src/main/handlers/`.
+4. Registration is automatic: `registerIpcHandlers()` in `src/main/registerHandlers.ts` derives the channel name from the object keys. A namespace may also carry plain values that preload supplies itself (`settings.initial`, `platform.pathSeparator`); those are not callable and must not be registered.
+
 ## Global settings
 
-App-wide preferences live in `userData/settings.json`, owned by `src/main/settings.ts` -- never in the project DB, because a preference is not story data and has to be readable with no project open.
+App-wide preferences live in `userData/settings.json`, owned by `src/main/settings.ts`, deliberately not in the project database. See [Application Architecture](docs/architecture/application.md) for the reasoning and for how the value reaches the renderer.
 
-- The shape is `Settings` in `src/shared/ipc.ts`. The main process owns the defaults and validates every value on both read and write, since the file is hand-editable.
-- A `null` setting means "follow the system", and the renderer resolves it. Keep main from resolving it, or the OS choice gets frozen into the file.
-- `settings:boot` is the only synchronous IPC channel: preload reads the stored value once so the renderer can apply it on its first frame. Everything else stays async `invoke`.
+- A `null` setting means "follow the system", and only the renderer resolves it.
+- `settings:boot` is the only synchronous IPC channel. Everything else stays async `invoke`.
 - To add a setting: extend `Settings` / `UpdateSettingsInput` in `src/shared/ipc.ts`, give it a default and validation in `src/main/settings.ts`, then add its control to a page in `src/renderer/features/settings/`.
 
 ## Domain model
 
-Hierarchy: Project > Collection > Chapter > Event.
+Hierarchy: Project > Collection > Chapter > Event, with Characters and Tags scoped to the whole Project. The full model — ordering, reader progression, and how each field is gated — is in [Database Architecture](docs/architecture/database.md). Read it before touching reader-visible data.
 
-- Viewing order is a three-level chain: `collection.sortOrder`, then `chapter.sortOrder`, then `event.sortOrder`. A `sortOrder` is only meaningful within its parent, so never compare them across parents.
-- Characters and Tags are scoped to the whole Project, not to a Collection.
-- **Spoiler safety is the core invariant of this app.**
-  - Character `synopsis` and `imagePath` are ungated and curated by hand. They must only contain facts true from the character's first appearance. Anything spoilery belongs on an Event.
-  - Aliases and character tags are gated per row by `introducedInChapterId` (`null` = always visible).
-  - Reader-facing reads (e.g. `characters.getForReader`) filter by `progressChapterId`. `null` means the reader finished everything. Resolving linear position happens in the main process, never in the renderer.
-  - When adding any new reader-visible field, decide how it is gated before writing code.
-- `events.contentJson` is a JSON array of rich-text nodes. `contentPlain` is a plain-text mirror kept in sync by the app layer, so update both together.
+- **Spoiler safety is the core invariant of this app.** Decide how any new reader-visible field is gated before writing code.
+- Resolving linear chapter position happens in the main process, never in the renderer.
+- `events.contentJson` is a JSON array of rich-text nodes and `contentPlain` is its plain-text mirror, so update both together.
 
 ## Database conventions
 
-- Primary keys are text UUIDs via `$defaultFn(() => randomUUID())`. Join tables use composite primary keys.
-- Entity tables have `createdAt` / `updatedAt` (unix timestamps, `updatedAt` uses `$onUpdate`).
-- Every `sortOrder` column has a `>= 0` CHECK constraint.
-- Foreign keys declare an explicit `onDelete` (`cascade`, or `set null` for the `introducedInChapterId` columns).
-- `metadata` table is a special single-row table (integer PK = 1, CHECK enforces it).
-- **Schema changes:** Edit `src/db/schema.ts`, then run `npm run db:generate -- --name <meaningful_name>` to generate a new migration. Never manually edit generated migrations or modify existing migrations; use a new migration for every schema change.
+`src/db/schema.ts` is the source of truth for table definitions. Primary-key, timestamp, foreign-key, and constraint conventions are described in [Database Architecture](docs/architecture/database.md).
+
+- **Schema changes:** edit `src/db/schema.ts`, then run `npm run db:generate -- --name <meaningful_name>` to generate a new migration. One migration per change.
 
 ## Code style
 
