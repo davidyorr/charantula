@@ -342,7 +342,10 @@ export const charactersHandlers: IpcApi["characters"] = {
 		const db = getDb();
 		const lowerTarget = target.toLowerCase();
 
-		// Match against character name and disambiguation.
+		// Aliases are deliberately not targets; see Database Architecture,
+		// Event Content.
+
+		// Match against character name.
 		const characterMatches = await db
 			.select({
 				characterId: characters.id,
@@ -351,17 +354,6 @@ export const charactersHandlers: IpcApi["characters"] = {
 			})
 			.from(characters)
 			.where(eq(sql`lower(${characters.name})`, lowerTarget));
-
-		// Match against aliases.
-		const aliasMatches = await db
-			.select({
-				characterId: characterAliases.characterId,
-				name: characters.name,
-				disambiguation: characters.disambiguation,
-			})
-			.from(characterAliases)
-			.innerJoin(characters, eq(characterAliases.characterId, characters.id))
-			.where(eq(sql`lower(${characterAliases.alias})`, lowerTarget));
 
 		// Match against name + disambiguation (e.g. "Aragorn II" → Aragorn with
 		// disambiguation "II"). Fetch all characters and filter in JS.
@@ -380,25 +372,10 @@ export const charactersHandlers: IpcApi["characters"] = {
 			return combined === lowerTarget;
 		});
 
-		// Deduplicate by characterId (a name might also appear as an alias).
-		const seen = new Set<string>();
-		const results: Array<{
-			characterId: string;
-			name: string;
-			disambiguation: string | null;
-		}> = [];
-		for (const match of [
-			...characterMatches,
-			...disambiguationMatches,
-			...aliasMatches,
-		]) {
-			if (!seen.has(match.characterId)) {
-				seen.add(match.characterId);
-				results.push(match);
-			}
-		}
-
-		return results;
+		// The two sets cannot overlap: a row matches by name only when the target
+		// is the bare name, and by name plus disambiguation only when it carries
+		// one.
+		return [...characterMatches, ...disambiguationMatches];
 	},
 
 	async setImage(id, sourceFilePath) {

@@ -118,3 +118,14 @@
 	padding: 0 2px;
 	border-radius: 3px;
 }
+
+/* A reference whose character has been deleted -- broken rather than muted,
+   since it is damage in already-written content. */
+.missingRef {
+	background: color-mix(in srgb, var(--danger) 18%, transparent);
+	color: var(--danger);
+	font-family: var(--font-mono);
+	font-size: inherit;
+	padding: 0 2px;
+	border-radius: 3px;
+}

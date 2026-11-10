@@ -244,10 +244,16 @@ export async function editCharacter(
 	window: Page,
 	name: string,
 	index: number,
-	updates: { disambiguation?: string },
+	updates: { name?: string; disambiguation?: string },
 ) {
 	// Select the nth character button with this name in the sidebar
 	await getSidebar(window).getByRole("button", { name }).nth(index).click();
+
+	if (updates.name !== undefined) {
+		const input = window.getByPlaceholder("Character Name");
+		await input.fill(updates.name);
+		await input.blur();
+	}
 
 	if (updates.disambiguation !== undefined) {
 		const input = window.getByPlaceholder("e.g. the Conqueror");

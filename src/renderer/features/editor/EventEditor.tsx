@@ -1,161 +1,19 @@
-import { createMemo, Show, type Component } from "solid-js";
+import { createMemo, createSignal, Show, type Component } from "solid-js";
 
 import { ImageField } from "@/renderer/shared/ImageField";
+import {
+	nodesToText,
+	parseContent,
+	parseToNodes,
+} from "@/renderer/shared/contentNodes";
 import { project } from "@/renderer/shared/projectStore";
-import type { Event } from "@/shared/ipc";
+import type { ContentNode, Event } from "@/shared/ipc";
 
 import styles from "./CharacterEditor.module.css";
 
 type Props = {
 	id: string;
 };
-
-type ContentNode =
-	| { type: "text"; text: string }
-	| {
-			type: "character_ref";
-			characterId: string;
-			text: string;
-			disambiguation?: string | null;
-	  }
-	| {
-			type: "unresolved_ref";
-			text: string;
-	  }
-	| {
-			type: "ambiguous_ref";
-			text: string;
-			candidates: Array<{ characterId: string; name: string }>;
-	  };
-
-/**
- * Parses raw text containing [[Target]] wiki-links into structured content
- * nodes. Handles:
- *   - `[[Target]]` — display is the target text as typed
- *   - `[[Target|display]]` — shows `display` but resolves against `Target`
- *   - `\[[` — literal `[[` in the output (backslash dropped)
- *   - Empty target or empty display → plain text + diagnostic
- */
-async function parseToNodes(rawText: string): Promise<Array<ContentNode>> {
-	if (!rawText) {
-		return [];
-	}
-
-	const nodes: Array<ContentNode> = [];
-
-	// State machine to handle escaping and pipe splitting.
-	let i = 0;
-	const len = rawText.length;
-
-	while (i < len) {
-		// Check for escaped \[
-		if (rawText[i] === "\\" && rawText[i + 1] === "[") {
-			// Consume both characters and emit a literal "["
-			nodes.push({ type: "text", text: "[" });
-			i += 2;
-			continue;
-		}
-
-		// Look for [[
-		if (rawText[i] === "[" && rawText[i + 1] === "[") {
-			const start = i;
-			i += 2; // skip [[
-
-			// Find the closing ]], respecting nesting (not really needed per spec
-			// but safe to stop at first ]]).
-			let close = -1;
-			while (i < len) {
-				if (rawText[i] === "]" && rawText[i + 1] === "]") {
-					close = i;
-					break;
-				}
-				i++;
-			}
-
-			if (close === -1) {
-				// No closing ]], treat as plain text
-				nodes.push({ type: "text", text: rawText.slice(start) });
-				break;
-			}
-
-			const inner = rawText.slice(start + 2, close);
-			i += 2; // skip ]]
-
-			// Split on the first unescaped |
-			const pipeIdx = inner.indexOf("|");
-			let target: string;
-			let display: string | null;
-
-			if (pipeIdx === -1) {
-				target = inner.trim();
-				display = target;
-			} else {
-				target = inner.slice(0, pipeIdx).trim();
-				display = inner.slice(pipeIdx + 1).trim();
-			}
-
-			// Validate: empty target or empty display is invalid
-			if (!target || !display) {
-				nodes.push({ type: "text", text: rawText.slice(start, i) });
-				continue;
-			}
-
-			// Check for invalid characters in target
-			if (inner.includes("[[") || inner.includes("]]")) {
-				nodes.push({ type: "text", text: rawText.slice(start, i) });
-				continue;
-			}
-
-			// Resolve the target
-			const candidates =
-				await window.api.characters.resolveCharacterRef(target);
-
-			if (candidates.length === 0) {
-				nodes.push({
-					type: "unresolved_ref",
-					text: rawText.slice(start, i),
-				});
-			} else if (candidates.length === 1) {
-				nodes.push({
-					type: "character_ref",
-					characterId: candidates[0].characterId,
-					text: display,
-					disambiguation: candidates[0].disambiguation,
-				});
-			} else {
-				nodes.push({
-					type: "ambiguous_ref",
-					text: rawText.slice(start, i),
-					candidates: candidates.map((c) => ({
-						characterId: c.characterId,
-						name: c.name,
-						disambiguation: c.disambiguation,
-					})),
-				});
-			}
-
-			continue;
-		}
-
-		// Regular character — accumulate plain text, stopping at `\` or `[`
-		// so the loop can re-check for `[[` or `\[[` on the next iteration.
-		const textStart = i;
-		while (i < len && rawText[i] !== "\\" && rawText[i] !== "[") {
-			i++;
-		}
-		if (i > textStart) {
-			nodes.push({ type: "text", text: rawText.slice(textStart, i) });
-		} else if (i < len) {
-			// We stopped at `\` or `[` without consuming anything.
-			// Emit the character and advance by one so the loop can
-			// re-check it on the next iteration.
-			nodes.push({ type: "text", text: rawText[i] });
-			i++;
-		}
-	}
-
-	return nodes;
-}
 
 /**
  * Keeps the event_characters join table in sync with the character_ref
@@ -199,6 +57,16 @@ export const EventEditor: Component<Props> = (props) => {
 		return ev ? project.chapters.get(ev.chapterId) : undefined;
 	});
 
+	// The textarea opens with text regenerated from the nodes, so a live
+	// reference shows the Character's current name rather than the wording that
+	// was typed. After that the author's own text stands: re-deriving it on each
+	// keystroke would escape an unclosed `[[` as literal text, which the next
+	// parse could never read back as a reference.
+	const [typedContent, setTypedContent] = createSignal<string | null>(null);
+	const contentText = createMemo(
+		() => typedContent() ?? nodesToText(parseContent(event()?.contentJson)),
+	);
+
 	const updateEventFields = async (updates: Partial<Event>) => {
 		const current = event();
 		if (!current) {
@@ -218,6 +86,7 @@ export const EventEditor: Component<Props> = (props) => {
 	};
 
 	const handleContentChange = async (rawText: string) => {
+		setTypedContent(rawText);
 		const nodes = await parseToNodes(rawText);
 
 		await Promise.all([
@@ -268,7 +137,7 @@ export const EventEditor: Component<Props> = (props) => {
 						<label class={styles.label}>Content</label>
 						<textarea
 							class={styles.textarea}
-							value={ev().contentPlain ?? ""}
+							value={contentText()}
 							onChange={(e) =>
 								handleContentChange((e.target as HTMLTextAreaElement).value)
 							}

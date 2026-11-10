@@ -183,6 +183,52 @@ export type ReaderCharacterView = {
 };
 
 // -----------------------------------------------------------------------------
+// Event content nodes
+//
+// events.content_json is a JSON array of these. Not table-derived: this is the
+// app's own rich-text format, so the shape is hand-written here and parsed by
+// whoever renders it.
+//
+// `display` is stored because it records authoring intent, which cannot be
+// recovered later:
+// - null   -> the wiki-link target was the character's canonical name, so this
+//             reference shows the character's *current* name and
+//             disambiguation, read live. Renaming the character updates every
+//             such reference without rewriting the Event.
+// - string -> the author pinned this wording as `[[Target|wording]]`, so that
+//             exact text always shows. Like synopsis/imagePath this is ungated
+//             and curated: whoever writes it keeps spoiler responsibility for
+//             the wording.
+//
+// A snapshot of the character's name is never stored: a stored name is
+// indistinguishable from chosen wording, so rename behaviour has to come from
+// `display` rather than from text captured at authoring time.
+// -----------------------------------------------------------------------------
+
+export type CharacterRefNode = {
+	type: "character_ref";
+	characterId: string;
+	display: string | null;
+};
+
+export type ContentNode =
+	| { type: "text"; text: string }
+	| CharacterRefNode
+	| {
+			type: "unresolved_ref";
+			text: string;
+	  }
+	| {
+			type: "ambiguous_ref";
+			text: string;
+			candidates: Array<{
+				characterId: string;
+				name: string;
+				disambiguation: string | null;
+			}>;
+	  };
+
+// -----------------------------------------------------------------------------
 // Project lifecycle (not scoped to an open DB connection)
 // -----------------------------------------------------------------------------
 
@@ -306,8 +352,9 @@ export type IpcApi = {
 		reorder: (order: Array<ReorderEntry>) => Promise<void>;
 		/**
 		 * Resolves a character-reference target (as typed in wiki-link syntax)
-		 * against character names, disambiguations, and aliases. Returns all
-		 * matches so the renderer can decide: 1 match = resolved reference,
+		 * against character names and name-plus-disambiguation combinations.
+		 * Aliases are not targets; see Database Architecture. Returns all matches
+		 * so the renderer can decide: 1 match = resolved reference,
 		 * 0 = unresolved, 2+ = ambiguous.
 		 */
 		resolveCharacterRef: (target: string) => Promise<

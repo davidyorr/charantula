@@ -52,7 +52,22 @@ Characters and Tags are scoped to the whole Project, not to a Collection.
 
 Each entity is documented in its own file: TBD.
 
-Events store rich-text content in `contentJson` (a JSON array of nodes) with a plain-text mirror in `contentPlain`. Both are kept in sync by the application layer.
+### Event Content
+
+Events store rich text in `contentJson` (a JSON array of nodes) with `contentPlain` holding the wiki-link source it was parsed from. Both are written together by the application layer. `contentPlain` is only a fallback for an Event that has no node array: the editor generates its editable text from `contentJson`, so what the author is looking at always matches how the nodes currently render.
+
+The node shapes live in `src/shared/ipc.ts`; the format is the app's own rather than table-derived. A `character_ref` node points at a Character by id and carries a `display` field recording how it is to be worded:
+
+- `display: null` — the wiki-link target was the Character's canonical name, so the reference shows the Character's current name and disambiguation, read live at render time. Renaming a Character therefore updates every such reference without rewriting any Event — in the editor as well as the timeline, since neither reads a stored name.
+- `display: <string>` — the author pinned this wording as `[[Target|wording]]`, so that exact string always shows.
+
+A link target resolves only against a Character's canonical name, or the name-plus-disambiguation form (`[[Aragorn II]]`). Character aliases are deliberately not targets: an alias row is gated by `introducedInChapterId` while a reference's wording is not, so resolving a target through an alias could pin an alias the reader has not reached into an earlier Event. Writing `[[Gandalf|the Grey Pilgrim]]` states that intent openly instead.
+
+No node stores a snapshot of a Character's name. A stored name is indistinguishable from deliberately chosen wording, so intent is recorded at authoring time, while the Character's name is known, rather than inferred from the text at render time.
+
+A `character_ref` whose Character has been deleted renders as a visibly broken reference. The editor shows it as `[[?]]`, which parses back as an unresolved reference rather than dropping the reference out of the text.
+
+Literal `display` wording is not gated by `introducedInChapterId`. It sits inside an Event, so the Event's own position already bounds it in reveal order, but nothing stops wording that gives away an alias not yet introduced — like `synopsis` and `imagePath`, it is curated by whoever enters the data.
 
 ## Ordering
 
@@ -92,7 +107,7 @@ Because Chapters belong to Collections, chapter progression must be evaluated us
 
 ### Gated and Ungated Data
 
-Not all information is subject to the same spoiler restrictions. Ungated fields (e.g. `synopsis`, `imagePath`) are editorially curated and always visible — they must contain only facts true from the entity's first appearance, so anything spoilery belongs on an Event instead. Gated fields use `introducedInChapterId` to control visibility per-row; character aliases and character tags are gated this way.
+Not all information is subject to the same spoiler restrictions. Ungated fields (e.g. `synopsis`, `imagePath`) are editorially curated and always visible — they must contain only facts true from the entity's first appearance, so anything containing spoilers belongs on an Event instead. Gated fields use `introducedInChapterId` to control visibility per-row; character aliases and character tags are gated this way. An Event's `display` wording is deliberately not gated; see [Event Content](#event-content).
 
 ### `introducedInChapterId`
 
