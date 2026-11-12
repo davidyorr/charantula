@@ -10,6 +10,7 @@ import { project } from "@/renderer/shared/projectStore";
 import type { ContentNode, Event } from "@/shared/ipc";
 
 import { ContentField } from "./ContentField";
+import { useCreateFocus } from "./useCreateFocus";
 
 import styles from "./CharacterEditor.module.css";
 
@@ -58,6 +59,7 @@ export const EventEditor: Component<Props> = (props) => {
 		const ev = event();
 		return ev ? project.chapters.get(ev.chapterId) : undefined;
 	});
+	const focusTitle = useCreateFocus(() => props.id);
 
 	// The textarea opens with text regenerated from the nodes, so a live
 	// reference shows the Character's current name rather than the wording that
@@ -122,6 +124,7 @@ export const EventEditor: Component<Props> = (props) => {
 				<div class={styles.container}>
 					<header class={styles.header}>
 						<input
+							ref={focusTitle}
 							class={styles.nameInput}
 							value={ev().title}
 							onChange={(e) =>

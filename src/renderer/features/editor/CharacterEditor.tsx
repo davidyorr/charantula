@@ -13,6 +13,9 @@ import { ImageField } from "@/renderer/shared/ImageField";
 import { project } from "@/renderer/shared/projectStore";
 import type { CharacterAlias } from "@/shared/ipc";
 
+import { focusWhenInserted } from "./focusState";
+import { useCreateFocus } from "./useCreateFocus";
+
 import styles from "./CharacterEditor.module.css";
 
 type Props = {
@@ -21,6 +24,7 @@ type Props = {
 
 export const CharacterEditor: Component<Props> = (props) => {
 	const character = createMemo(() => project.characters.get(props.id));
+	const focusName = useCreateFocus(() => props.id);
 
 	const handleDisambiguationChange = async (e: Event) => {
 		const target = e.target as HTMLInputElement;
@@ -103,12 +107,26 @@ export const CharacterEditor: Component<Props> = (props) => {
 			.then((list) => setAliases(list));
 	});
 
+	// A plain flag, not a signal: only the row `For` has just inserted runs a ref,
+	// so whoever reads this is the newly added row.
+	let pendingAliasFocus = false;
+
+	const focusNewAliasRow = (el: HTMLInputElement) => {
+		if (!pendingAliasFocus) {
+			return;
+		}
+
+		pendingAliasFocus = false;
+		focusWhenInserted(el);
+	};
+
 	const addAlias = async () => {
 		const newAlias = await window.api.characterAliases.create({
 			characterId: props.id,
 			alias: "",
 			introducedInChapterId: null,
 		});
+		pendingAliasFocus = true;
 		setAliases((prev) => [...prev, newAlias]);
 	};
 
@@ -201,6 +219,7 @@ export const CharacterEditor: Component<Props> = (props) => {
 				<div class={styles.container}>
 					<header class={styles.header}>
 						<input
+							ref={focusName}
 							class={styles.nameInput}
 							value={char().name}
 							onChange={handleNameChange}
@@ -256,6 +275,7 @@ export const CharacterEditor: Component<Props> = (props) => {
 								{(alias) => (
 									<div class={styles.aliasRow}>
 										<input
+											ref={focusNewAliasRow}
 											class={styles.aliasInput}
 											value={alias.alias}
 											onChange={() => {

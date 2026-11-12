@@ -4,6 +4,8 @@ import { ImageField } from "@/renderer/shared/ImageField";
 import { project } from "@/renderer/shared/projectStore";
 import type { Chapter } from "@/shared/ipc";
 
+import { useCreateFocus } from "./useCreateFocus";
+
 import styles from "./CharacterEditor.module.css";
 
 type Props = {
@@ -12,6 +14,7 @@ type Props = {
 
 export const ChapterEditor: Component<Props> = (props) => {
 	const chapter = createMemo(() => project.chapters.get(props.id));
+	const focusTitle = useCreateFocus(() => props.id);
 
 	const handleUpdate = async (field: keyof Chapter, value: string) => {
 		if (value === chapter()?.[field]) {
@@ -43,6 +46,7 @@ export const ChapterEditor: Component<Props> = (props) => {
 				<div class={styles.container}>
 					<header class={styles.header}>
 						<input
+							ref={focusTitle}
 							class={styles.nameInput}
 							value={chap().title}
 							onChange={(e) =>

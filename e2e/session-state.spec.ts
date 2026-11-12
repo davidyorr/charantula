@@ -143,9 +143,13 @@ test("restores the panel and the selected entity after a restart", async ({
 	await expect(sidebar2.getByTestId("collection-Fellowship")).toHaveCount(0);
 
 	// ...while the chapter that was being edited is still open in the panel.
-	await expect(
-		window2.getByPlaceholder("Chapter Title (e.g. Chapter 1)"),
-	).toHaveValue("The Shire");
+	const restoredTitle = window2.getByPlaceholder(
+		"Chapter Title (e.g. Chapter 1)",
+	);
+	await expect(restoredTitle).toHaveValue("The Shire");
+
+	// Restoring is not creating: the panel opens without taking focus
+	await expect(restoredTitle).not.toBeFocused();
 
 	// Reopening the section shows the tree as it was left: this collection
 	// expanded, the chapter inside it collapsed.

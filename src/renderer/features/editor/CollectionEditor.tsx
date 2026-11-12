@@ -3,6 +3,8 @@ import { createMemo, Show, type Component } from "solid-js";
 import { project } from "@/renderer/shared/projectStore";
 import type { Collection } from "@/shared/ipc";
 
+import { useCreateFocus } from "./useCreateFocus";
+
 import styles from "./CharacterEditor.module.css";
 
 type Props = {
@@ -11,6 +13,7 @@ type Props = {
 
 export const CollectionEditor: Component<Props> = (props) => {
 	const collection = createMemo(() => project.collections.get(props.id));
+	const focusTitle = useCreateFocus(() => props.id);
 
 	const updateField = async (field: keyof Collection, value: string) => {
 		if (value === collection()?.[field]) {
@@ -29,6 +32,7 @@ export const CollectionEditor: Component<Props> = (props) => {
 				<div class={styles.container}>
 					<header class={styles.header}>
 						<input
+							ref={focusTitle}
 							class={styles.nameInput}
 							value={col().title}
 							onChange={(e) =>

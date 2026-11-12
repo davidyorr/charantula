@@ -9,6 +9,7 @@ import { project } from "@/renderer/shared/projectStore";
 import type { Chapter, Character, Collection, Event } from "@/shared/ipc";
 
 import { DragWrapper } from "./DragWrapper";
+import { requestFocusFor } from "./focusState";
 import { editorStore } from "./store";
 
 import styles from "./Sidebar.module.css";
@@ -36,6 +37,7 @@ export const Sidebar: Component<Props> = (props) => {
 			title: "New Collection",
 		});
 		project.collections.add(newCollection);
+		requestFocusFor(newCollection.id);
 		editorStore.actions.select({ kind: "collection", id: newCollection.id });
 		editorStore.actions.setExpanded(newCollection.id, true); // Optionally expand on creation
 	};
@@ -47,6 +49,7 @@ export const Sidebar: Component<Props> = (props) => {
 			title: "New Chapter",
 		});
 		project.chapters.add(newChapter);
+		requestFocusFor(newChapter.id);
 		editorStore.actions.select({ kind: "chapter", id: newChapter.id });
 		editorStore.actions.setExpanded(collectionId, true); // Ensure parent is expanded
 	};
@@ -58,6 +61,7 @@ export const Sidebar: Component<Props> = (props) => {
 			title: "New Event",
 		});
 		project.events.add(newEvent);
+		requestFocusFor(newEvent.id);
 		editorStore.actions.select({ kind: "event", id: newEvent.id });
 		editorStore.actions.setExpanded(chapterId, true); // Ensure parent is expanded
 	};
@@ -68,6 +72,7 @@ export const Sidebar: Component<Props> = (props) => {
 			name: "New Character",
 		});
 		project.characters.add(newCharacter);
+		requestFocusFor(newCharacter.id);
 		editorStore.actions.select({ kind: "character", id: newCharacter.id });
 	};
 
