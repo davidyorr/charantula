@@ -229,12 +229,45 @@ export type ContentNode =
 	  };
 
 // -----------------------------------------------------------------------------
+// Edit-view state (per project, held by the main process)
+// -----------------------------------------------------------------------------
+
+// The four entities the edit view can name. A list rather than a bare union so
+// the type, the runtime guard used on hand-written state, and the sidebar's
+// per-kind lookups cannot drift apart.
+export const ENTITY_KINDS = [
+	"collection",
+	"chapter",
+	"event",
+	"character",
+] as const;
+export type EntityKind = (typeof ENTITY_KINDS)[number];
+
+export const isEntityKind = (v: unknown): v is EntityKind =>
+	(ENTITY_KINDS as ReadonlyArray<unknown>).includes(v);
+
+export type Selection = { kind: EntityKind; id: string } | null;
+
+/**
+ * How the edit view was last left in one project. Split into `sections` and
+ * `expanded` deliberately: the former is keyed by the sidebar's own section
+ * names, which main never needs to know, while the latter is keyed by entity id
+ * and can therefore be pruned against the project's live ids on read.
+ */
+export type ProjectUiState = {
+	selection: Selection;
+	sections: Record<string, boolean>;
+	expanded: Record<string, boolean>;
+};
+
+// -----------------------------------------------------------------------------
 // Project lifecycle (not scoped to an open DB connection)
 // -----------------------------------------------------------------------------
 
 export type ProjectOpenResult = {
 	projectDirectory: string;
 	metadata: Metadata;
+	uiState: ProjectUiState;
 };
 
 export type RecentProject = {
@@ -284,6 +317,12 @@ export type IpcApi = {
 			projectDescription?: string;
 		}) => Promise<ProjectOpenResult>;
 		open: (args: { projectDirectory: string }) => Promise<ProjectOpenResult>;
+		/**
+		 * Stores this project's edit-view state. Takes no directory: main keys it
+		 * by the project it currently has open rather than trusting a path from
+		 * the renderer.
+		 */
+		saveUiState: (state: ProjectUiState) => Promise<void>;
 		close: () => Promise<void>;
 		getRecent: () => Promise<Array<RecentProject>>;
 		pickParentDirectory: () => Promise<string | null>;

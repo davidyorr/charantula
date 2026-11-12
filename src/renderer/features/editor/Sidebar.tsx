@@ -26,6 +26,10 @@ export const Sidebar: Component<Props> = (props) => {
 	const isExpanded = (id: string, defaultOpen: boolean = false) =>
 		editorStore.state.expanded[id] ?? defaultOpen;
 
+	// Kept apart from node ids so main can prune those without knowing these names
+	const isSectionExpanded = (key: string, defaultOpen: boolean = false) =>
+		editorStore.state.sections[key] ?? defaultOpen;
+
 	const handleAddCollection = async (e: MouseEvent) => {
 		e.stopPropagation();
 		const newCollection = await window.api.collections.create({
@@ -110,6 +114,12 @@ export const Sidebar: Component<Props> = (props) => {
 
 		const kind: keyof typeof project = `${selected.kind}s`;
 
+		// A restored selection reaches this effect before the project's lists have
+		// resolved, so an unknown id is not yet evidence of a deletion.
+		if (project[kind].resource.loading) {
+			return;
+		}
+
 		// if whatever we have selected no longer exists in our project stores,
 		// clear the editor
 		const exists = project[kind].get(selected.id);
@@ -123,12 +133,12 @@ export const Sidebar: Component<Props> = (props) => {
 			<Collapsible
 				label="Collections"
 				variant="section"
-				open={isExpanded("section-collections", true)}
+				open={isSectionExpanded("collections", true)}
 				onOpenChange={(isOpen) =>
-					editorStore.actions.setExpanded("section-collections", isOpen)
+					editorStore.actions.setSection("collections", isOpen)
 				}
 				onDoubleClick={() =>
-					editorStore.actions.toggleExpanded("section-collections", true)
+					editorStore.actions.toggleSection("collections", true)
 				}
 				action={
 					<IconButton
@@ -325,12 +335,12 @@ export const Sidebar: Component<Props> = (props) => {
 			<Collapsible
 				label="Characters"
 				variant="section"
-				open={isExpanded("section-characters", true)}
+				open={isSectionExpanded("characters", true)}
 				onOpenChange={(isOpen) =>
-					editorStore.actions.setExpanded("section-characters", isOpen)
+					editorStore.actions.setSection("characters", isOpen)
 				}
 				onDoubleClick={() =>
-					editorStore.actions.toggleExpanded("section-characters", true)
+					editorStore.actions.toggleSection("characters", true)
 				}
 				action={
 					<IconButton

@@ -29,6 +29,8 @@ Responsibilities include:
 
 Global settings are app-level preferences rather than story data, so they live in `settings.json` under Electron's `userData` path instead of in a project database, which also makes them readable with no project open. `src/main/settings.ts` owns that file: it holds the defaults and validates every value on both read and write, since the file is hand-editable. `src/main/recentProjects.ts` follows the same pattern for recent projects.
 
+A third file in that directory, `application-state.json`, records how the app was last used rather than what the user prefers: window geometry, and per project the edit view's panel state (which entity was open and which nodes were expanded, keyed by absolute project directory). It is machine-written and merged on write, so saving one project cannot drop another's. It is not story data either, so it stays out of the portable project folder -- which also means it is keyed by path, and moving a project folder starts that project's panel state fresh.
+
 A `null` setting means "follow the system" and is resolved only by the renderer. If the main process resolved it, the operating system's choice at that moment would be frozen into the file.
 
 Database access is restricted to the main process. The renderer must never import or use Drizzle ORM or better-sqlite3.

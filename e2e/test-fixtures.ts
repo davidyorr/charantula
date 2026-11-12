@@ -183,6 +183,18 @@ export async function createProjectViaForm(
 	await expect(window).toHaveURL(new RegExp(`.*#/edit/${name}`));
 }
 
+/** Drives the "Open existing project" form and waits until the editor is open. */
+export async function openProjectViaForm(
+	app: ElectronApplication,
+	window: Page,
+	parentDir: string,
+	name: string,
+) {
+	await mockOpenDialog(app, parentDir);
+	await window.getByRole("button", { name: "Open existing project" }).click();
+	await expect(window).toHaveURL(new RegExp(`.*#/edit/${name}`));
+}
+
 export async function addCharacter(
 	window: Page,
 	{

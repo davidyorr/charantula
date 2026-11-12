@@ -8,7 +8,7 @@ import {
 	findFileContainingText,
 	findFileWithContents,
 	getSidebar,
-	mockOpenDialog,
+	openProjectViaForm,
 	writePng,
 } from "./test-fixtures";
 
@@ -35,9 +35,7 @@ test("persists a character's image across an app restart", async ({
 	await app.close();
 	const { app: app2, window: window2 } = await launchApp();
 
-	await mockOpenDialog(app2, project.dir);
-	await window2.getByRole("button", { name: "Open existing project" }).click();
-	await expect(window2).toHaveURL(new RegExp(`.*#/edit/${project.name}`));
+	await openProjectViaForm(app2, window2, project.dir, project.name);
 
 	const sidebar = getSidebar(window2);
 	await expect(sidebar).toBeVisible();

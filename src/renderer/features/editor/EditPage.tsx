@@ -7,6 +7,7 @@ import { NavigationButton } from "@/renderer/shared/NavigationButton";
 
 import { EditorPanel } from "./EditorPanel";
 import { Sidebar } from "./Sidebar";
+import { useUiStatePersistence } from "./useUiStatePersistence";
 
 import styles from "./EditPage.module.css";
 
@@ -15,7 +16,8 @@ export const EditPage: Component = () => {
 
 	const params = useParams();
 	const navigate = useNavigate();
-	console.log(params);
+
+	useUiStatePersistence();
 
 	const handleTimelineClick = () => {
 		navigate(`/timeline/${encodeURIComponent(params.projectName as string)}`);

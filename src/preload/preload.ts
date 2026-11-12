@@ -12,6 +12,7 @@ const api: IpcApi = {
 	project: {
 		new: (args) => ipcRenderer.invoke("project:new", args),
 		open: (args) => ipcRenderer.invoke("project:open", args),
+		saveUiState: (state) => ipcRenderer.invoke("project:saveUiState", state),
 		close: () => ipcRenderer.invoke("project:close"),
 		getRecent: () => ipcRenderer.invoke("project:getRecent"),
 		pickParentDirectory: () =>
