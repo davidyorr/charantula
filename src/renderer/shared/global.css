@@ -50,6 +50,51 @@
 
 	--danger: #b13b2f;
 	--danger-fg: #fdf6f0;
+
+	/* Character-reference state colors, used by the Event editor's live highlights
+	   and the timeline. Each is a text color plus a tinted background made by
+	   mixing that color over transparent at --ref-tint:
+
+	     color: var(--ref-valid);
+	     background: color-mix(in srgb, var(--ref-valid) var(--ref-tint), transparent);
+
+	   A reference to a deleted Character is nobody's mistake, so it uses --muted
+	   instead of a state color.
+
+	   Each state color has its own hue (--ref-h-*), lightness (--ref-l-*), and
+	   chroma (--ref-c-*); hues are the only values shared by both themes. The
+	   chroma is deliberately set higher than sRGB can display: the browser clamps
+	   it, so each one renders at the most saturated color available for its hue and
+	   lightness. That means the state colors are not equally vivid, and amber has
+	   the least headroom.
+
+	   To adjust: change the numbers per theme, never the token definitions.
+	   - --ref-l-*: lower = darker ink (light theme), higher = brighter ink (dark).
+	   - --ref-tint: how loud the highlight is. Higher tints lower the contrast.
+	   - --ref-c-*: leave it high unless you want the state colors muted. */
+
+	--ref-h-valid: 150; /* green */
+	--ref-h-unresolved: 14; /* red */
+	--ref-h-ambiguous: 95; /* amber */
+
+	--ref-l-valid: 0.42;
+	--ref-l-unresolved: 0.42;
+	--ref-l-ambiguous: 0.42;
+
+	/* the most this lightness allows for all three hues */
+	--ref-c-valid: 0.385;
+	--ref-c-unresolved: 0.385;
+	--ref-c-ambiguous: 0.385;
+
+	--ref-tint: 26%; /* how strong the highlight background is */
+
+	--ref-valid: oklch(var(--ref-l-valid) var(--ref-c-valid) var(--ref-h-valid));
+	--ref-unresolved: oklch(
+		var(--ref-l-unresolved) var(--ref-c-unresolved) var(--ref-h-unresolved)
+	);
+	--ref-ambiguous: oklch(
+		var(--ref-l-ambiguous) var(--ref-c-ambiguous) var(--ref-h-ambiguous)
+	);
 }
 
 :root[data-theme="dark"] {
@@ -63,17 +108,24 @@
 	--border: #38322a;
 
 	--accent: #c17b6b;
-	/* --accent: #04b2d9; */
 	--accent-fg: #1c1310;
 	--accent-muted: #4a332e;
 
 	--danger: #d97662;
 	--danger-fg: #1c1310;
 
+	/* Same hues, brighter ink and a slightly stronger tint so the state colors
+	   lift off a near-black surface. */
+	--ref-l-valid: 0.67;
+	--ref-c-valid: 0.23;
+	--ref-l-unresolved: 0.67;
+	--ref-c-unresolved: 0.32;
+	--ref-l-ambiguous: 0.67;
+	--ref-c-ambiguous: 0.23;
+	--ref-tint: 30%;
+
 	--shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
 	--shadow-md: 0 4px 16px rgba(0, 0, 0, 0.4);
-
-	--focus-ring: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
 }
 
 * {

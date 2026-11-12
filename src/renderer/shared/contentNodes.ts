@@ -1,4 +1,10 @@
-import type { ContentNode } from "@/shared/ipc";
+import {
+	DELETED_REF_TARGET,
+	matchCharacterRef,
+	toRefCandidates,
+} from "@/shared/characterRef";
+import type { Character, ContentNode } from "@/shared/ipc";
+import { scanWikiLinks } from "@/shared/wikiLinks";
 
 import { project } from "./projectStore";
 
@@ -25,138 +31,57 @@ export function parseContent(
  *   - `[[Target]]` — follows the Character's name, since the target matched it
  *   - `[[Target|display]]` — always shows `display`; resolves against `Target`
  *   - `\[[` — literal `[[` in the output (backslash dropped)
- *   - Empty target or empty display → plain text + diagnostic
+ *   - Empty target or empty display → plain text
+ *
+ * `characters` is the caller's live list, so the state a target gets here is
+ * the same one the editor tints it with.
  */
-export async function parseToNodes(
+export function parseToNodes(
 	rawText: string,
-): Promise<Array<ContentNode>> {
-	if (!rawText) {
-		return [];
-	}
+	characters: Array<Character>,
+): Array<ContentNode> {
+	const candidates = toRefCandidates(characters);
 
-	const nodes: Array<ContentNode> = [];
-
-	// State machine to handle escaping and pipe splitting.
-	let i = 0;
-	const len = rawText.length;
-
-	while (i < len) {
-		// Check for escaped \[
-		if (rawText[i] === "\\" && rawText[i + 1] === "[") {
-			// Consume both characters and emit a literal "["
-			nodes.push({ type: "text", text: "[" });
-			i += 2;
-			continue;
+	return scanWikiLinks(rawText).flatMap((token): Array<ContentNode> => {
+		if (token.kind === "text") {
+			// The raw text keeps the backslash in `\[` for the highlight layer;
+			// storing it is where that escape is consumed.
+			return [{ type: "text", text: token.text.replace(/\\\[/g, "[") }];
 		}
 
-		// Look for [[
-		if (rawText[i] === "[" && rawText[i + 1] === "[") {
-			const start = i;
-			i += 2; // skip [[
+		const match = matchCharacterRef(token.target, candidates);
 
-			// Find the closing ]], respecting nesting (not really needed per spec
-			// but safe to stop at first ]]).
-			let close = -1;
-			while (i < len) {
-				if (rawText[i] === "]" && rawText[i + 1] === "]") {
-					close = i;
-					break;
-				}
-				i++;
-			}
+		if (match.state === "valid") {
+			// Only a reference with no wording of the author's own, whose target
+			// was the name itself, can follow that name. Matching is
+			// case-insensitive as it is in matchCharacterRef, so typing the name
+			// in another case still produces a live reference.
+			const followsTheName =
+				token.display === null &&
+				match.candidate.name.toLowerCase() === token.target.toLowerCase();
 
-			if (close === -1) {
-				// No closing ]], treat as plain text
-				nodes.push({ type: "text", text: rawText.slice(start) });
-				break;
-			}
-
-			const inner = rawText.slice(start + 2, close);
-			i += 2; // skip ]]
-
-			// Split on the first unescaped |
-			const pipeIdx = inner.indexOf("|");
-			let target: string;
-			let display: string | null;
-
-			if (pipeIdx === -1) {
-				target = inner.trim();
-				display = target;
-			} else {
-				target = inner.slice(0, pipeIdx).trim();
-				display = inner.slice(pipeIdx + 1).trim();
-			}
-
-			// Validate: empty target or empty display is invalid
-			if (!target || !display) {
-				nodes.push({ type: "text", text: rawText.slice(start, i) });
-				continue;
-			}
-
-			// Check for invalid characters in target
-			if (inner.includes("[[") || inner.includes("]]")) {
-				nodes.push({ type: "text", text: rawText.slice(start, i) });
-				continue;
-			}
-
-			// Resolve the target
-			const candidates =
-				await window.api.characters.resolveCharacterRef(target);
-
-			if (candidates.length === 0) {
-				nodes.push({
-					type: "unresolved_ref",
-					text: rawText.slice(start, i),
-				});
-			} else if (candidates.length === 1) {
-				// Only a reference with no wording of the author's own, whose
-				// target was the name itself, can follow that name. Matching is
-				// case-insensitive as it is in resolveCharacterRef, so typing the
-				// name in another case still produces a live reference.
-				const targetsCanonicalName =
-					pipeIdx === -1 &&
-					candidates[0].name.toLowerCase() === target.toLowerCase();
-				nodes.push({
+			return [
+				{
 					type: "character_ref",
-					characterId: candidates[0].characterId,
-					display: targetsCanonicalName ? null : display,
-				});
-			} else {
-				nodes.push({
-					type: "ambiguous_ref",
-					text: rawText.slice(start, i),
-					candidates: candidates.map((c) => ({
-						characterId: c.characterId,
-						name: c.name,
-						disambiguation: c.disambiguation,
-					})),
-				});
-			}
-
-			continue;
+					characterId: match.candidate.characterId,
+					display: followsTheName ? null : (token.display ?? token.target),
+				},
+			];
 		}
 
-		// Regular character — accumulate plain text, stopping at `\` or `[`
-		// so the loop can re-check for `[[` or `\[[` on the next iteration.
-		const textStart = i;
-		while (i < len && rawText[i] !== "\\" && rawText[i] !== "[") {
-			i++;
-		}
-		if (i > textStart) {
-			nodes.push({ type: "text", text: rawText.slice(textStart, i) });
-		} else if (i < len) {
-			// We stopped at `\` or `[` without consuming anything.
-			// Emit the character and advance by one so the loop can
-			// re-check it on the next iteration.
-			nodes.push({ type: "text", text: rawText[i] });
-			i++;
-		}
-	}
+		const text = rawText.slice(token.start, token.end);
 
-	return nodes;
+		if (match.state === "ambiguous") {
+			return [{ type: "ambiguous_ref", text, candidates: match.candidates }];
+		}
+
+		// Unresolved, and `[[?]]` for a Character that has since been deleted,
+		// are both stored as their original source text.
+		return [{ type: "unresolved_ref", text }];
+	});
 }
 
-// The space form is what resolveCharacterRef matches for a name plus
+// The space form is what matchCharacterRef matches for a name plus
 // disambiguation, so a live reference re-parses to `display: null`.
 const linkTarget = (name: string, disambiguation: string | null) =>
 	disambiguation ? `${name} ${disambiguation}` : name;
@@ -175,11 +100,11 @@ export function nodesToText(nodes: Array<ContentNode>): string {
 			if (node.type === "character_ref") {
 				const character = project.characters.get(node.characterId);
 				// A deleted Character leaves nothing to aim at. "?" keeps the link
-				// visible in the text and re-parses as unresolved, rather than the
-				// reference silently disappearing from the Event.
+				// visible in the text and re-parses as a deleted reference, rather
+				// than the reference silently disappearing from the Event.
 				const target = character
 					? linkTarget(character.name, character.disambiguation)
-					: "?";
+					: DELETED_REF_TARGET;
 				return node.display === null
 					? `[[${target}]]`
 					: `[[${target}|${node.display}]]`;

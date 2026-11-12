@@ -350,20 +350,6 @@ export type IpcApi = {
 		update: (id: string, patch: UpdateCharacterInput) => Promise<Character>;
 		delete: (id: string) => Promise<void>;
 		reorder: (order: Array<ReorderEntry>) => Promise<void>;
-		/**
-		 * Resolves a character-reference target (as typed in wiki-link syntax)
-		 * against character names and name-plus-disambiguation combinations.
-		 * Aliases are not targets; see Database Architecture. Returns all matches
-		 * so the renderer can decide: 1 match = resolved reference,
-		 * 0 = unresolved, 2+ = ambiguous.
-		 */
-		resolveCharacterRef: (target: string) => Promise<
-			Array<{
-				characterId: string;
-				name: string;
-				disambiguation: string | null;
-			}>
-		>;
 		setImage: (id: string, sourceFilePath: string) => Promise<Character>;
 		removeImage: (id: string) => Promise<Character>;
 	};

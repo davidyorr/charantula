@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from "drizzle-orm";
+import { eq, inArray } from "drizzle-orm";
 
 import {
 	chapters,
@@ -337,46 +337,6 @@ export const charactersHandlers: IpcApi["characters"] = {
 					.run();
 			}
 		});
-	},
-
-	async resolveCharacterRef(target) {
-		const db = getDb();
-		const lowerTarget = target.toLowerCase();
-
-		// Aliases are deliberately not targets; see Database Architecture,
-		// Event Content.
-
-		// Match against character name.
-		const characterMatches = await db
-			.select({
-				characterId: characters.id,
-				name: characters.name,
-				disambiguation: characters.disambiguation,
-			})
-			.from(characters)
-			.where(eq(sql`lower(${characters.name})`, lowerTarget));
-
-		// Match against name + disambiguation (e.g. "Aragorn II" → Aragorn with
-		// disambiguation "II"). Fetch all characters and filter in JS.
-		const allChars = await db
-			.select({
-				characterId: characters.id,
-				name: characters.name,
-				disambiguation: characters.disambiguation,
-			})
-			.from(characters);
-		const disambiguationMatches = allChars.filter((c) => {
-			if (!c.disambiguation) {
-				return false;
-			}
-			const combined = `${c.name} ${c.disambiguation}`.toLowerCase();
-			return combined === lowerTarget;
-		});
-
-		// The two sets cannot overlap: a row matches by name only when the target
-		// is the bare name, and by name plus disambiguation only when it carries
-		// one.
-		return [...characterMatches, ...disambiguationMatches];
 	},
 
 	async setImage(id, sourceFilePath) {

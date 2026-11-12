@@ -1,0 +1,120 @@
+/* The field's visible box. It owns the border, background, focus ring and
+   resize handle so the textarea and the layer beneath it have nothing to agree
+   on but their text metrics. */
+.wrapper {
+	position: relative;
+	display: grid;
+	min-height: 120px;
+	background: var(--panel);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-md);
+	overflow: hidden;
+	resize: vertical;
+	transition:
+		border-color var(--transition-fast),
+		box-shadow var(--transition-fast);
+
+	&:focus-within {
+		border-color: var(--accent);
+		box-shadow: var(--focus-ring);
+	}
+}
+
+/* Everything that decides where a line breaks lives here, shared by both
+   layers, so the highlights cannot drift off the text they sit under. */
+.metrics {
+	grid-area: 1 / 1;
+	width: 100%;
+	height: 100%;
+	padding: var(--space-3);
+	margin: 0;
+	border: 0;
+	font-family: var(--font-ui);
+	font-size: var(--text-base);
+	line-height: 1.5;
+	letter-spacing: normal;
+	tab-size: 4;
+	white-space: pre-wrap;
+	overflow-wrap: break-word;
+}
+
+/* Painted beneath the textarea, showing only tinted backgrounds: the caret,
+   the selection, and the glyphs themselves all stay the textarea's own. */
+.highlights {
+	color: transparent;
+	background: transparent;
+	overflow: hidden;
+	pointer-events: none;
+	user-select: none;
+}
+
+.input {
+	background: transparent;
+	color: var(--fg);
+	overflow-x: hidden;
+	overflow-y: auto;
+	resize: none;
+
+	&:focus {
+		outline: none;
+	}
+
+	&::placeholder {
+		color: var(--muted);
+	}
+}
+
+/* State colors differ only in hue, so each state is one mixed background. */
+.refValid {
+	background-color: color-mix(
+		in srgb,
+		var(--ref-valid) var(--ref-tint),
+		transparent
+	);
+}
+
+.refUnresolved {
+	background-color: color-mix(
+		in srgb,
+		var(--ref-unresolved) var(--ref-tint),
+		transparent
+	);
+}
+
+.refAmbiguous {
+	background-color: color-mix(
+		in srgb,
+		var(--ref-ambiguous) var(--ref-tint),
+		transparent
+	);
+}
+
+.refDeleted {
+	background-color: color-mix(
+		in srgb,
+		var(--muted) var(--ref-tint),
+		transparent
+	);
+}
+
+.summary {
+	margin: 0;
+	font-size: var(--text-sm);
+	color: var(--muted);
+}
+
+.summaryValid {
+	color: var(--ref-valid);
+}
+
+.summaryUnresolved {
+	color: var(--ref-unresolved);
+}
+
+.summaryAmbiguous {
+	color: var(--ref-ambiguous);
+}
+
+.summaryDeleted {
+	color: var(--muted);
+}

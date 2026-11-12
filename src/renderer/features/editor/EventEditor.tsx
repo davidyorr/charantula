@@ -9,6 +9,8 @@ import {
 import { project } from "@/renderer/shared/projectStore";
 import type { ContentNode, Event } from "@/shared/ipc";
 
+import { ContentField } from "./ContentField";
+
 import styles from "./CharacterEditor.module.css";
 
 type Props = {
@@ -85,9 +87,15 @@ export const EventEditor: Component<Props> = (props) => {
 		project.events.update(updated);
 	};
 
+	// Highlighting follows the caret, so the typed text is captured on every
+	// keystroke; saving the Event stays on the textarea's own `change`.
+	const handleContentInput = (rawText: string) => {
+		setTypedContent(rawText);
+	};
+
 	const handleContentChange = async (rawText: string) => {
 		setTypedContent(rawText);
-		const nodes = await parseToNodes(rawText);
+		const nodes = parseToNodes(rawText, project.characters.list());
 
 		await Promise.all([
 			updateEventFields({
@@ -135,13 +143,10 @@ export const EventEditor: Component<Props> = (props) => {
 
 					<div class={styles.field}>
 						<label class={styles.label}>Content</label>
-						<textarea
-							class={styles.textarea}
+						<ContentField
 							value={contentText()}
-							onChange={(e) =>
-								handleContentChange((e.target as HTMLTextAreaElement).value)
-							}
-							placeholder="Content..."
+							onInput={handleContentInput}
+							onChange={handleContentChange}
 						/>
 					</div>
 				</div>

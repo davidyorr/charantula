@@ -110,22 +110,39 @@
 }
 
 .unresolvedRef,
-.ambiguousRef {
-	background: var(--muted-bg);
-	color: var(--muted);
+.ambiguousRef,
+.missingRef {
 	font-family: var(--font-mono);
 	font-size: inherit;
 	padding: 0 2px;
 	border-radius: 3px;
 }
 
-/* A reference whose character has been deleted -- broken rather than muted,
-   since it is damage in already-written content. */
+/* The same state colors the Event editor uses while you type, so one visual
+   grammar covers both views. Problems only: a resolved reference is a control
+   the reader clicks, not news, so it keeps the accent link above. */
+.unresolvedRef {
+	background: color-mix(
+		in srgb,
+		var(--ref-unresolved) var(--ref-tint),
+		transparent
+	);
+	color: var(--ref-unresolved);
+}
+
+.ambiguousRef {
+	background: color-mix(
+		in srgb,
+		var(--ref-ambiguous) var(--ref-tint),
+		transparent
+	);
+	color: var(--ref-ambiguous);
+}
+
+/* A reference whose Character has since been deleted. Muted rather than red:
+   the author resolved it correctly at the time, so the Character going away is
+   not a mistake in what they wrote. */
 .missingRef {
-	background: color-mix(in srgb, var(--danger) 18%, transparent);
-	color: var(--danger);
-	font-family: var(--font-mono);
-	font-size: inherit;
-	padding: 0 2px;
-	border-radius: 3px;
+	background: color-mix(in srgb, var(--muted) var(--ref-tint), transparent);
+	color: var(--muted);
 }
